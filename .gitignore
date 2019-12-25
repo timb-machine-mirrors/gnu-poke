@@ -45,3 +45,10 @@ config.h.in
 /src/pcl-lex.h
 /GNUmakefile
 /maint.mk
+/fuzz/pk.dict
+/fuzz/afl_gcc_whitelist
+/fuzz/in/
+/fuzz/out/
+/fuzz/collected/
+/fuzz/reduced/
+!/fuzz/Makefile

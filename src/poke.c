@@ -393,6 +393,9 @@ main (int argc, char *argv[])
   /* Initialization.  */
   initialize (argc, argv);
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+  __AFL_INIT();
+#endif
   /* Parse args, loading files, opening files for IO, etc etc */
   parse_args (argc, argv);
 
