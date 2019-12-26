@@ -49,6 +49,10 @@ config.h.in
 /fuzz/afl_gcc_whitelist
 /fuzz/in/
 /fuzz/out/
+/fuzz/sync_dir/
 /fuzz/collected/
 /fuzz/reduced/
+/fuzz/crashes/
+/fuzz/reduced_crashes/
+/fuzz/hangs/
 !/fuzz/Makefile
