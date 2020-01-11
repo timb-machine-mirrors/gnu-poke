@@ -1,6 +1,6 @@
 /* pkl.c - Poke compiler.  */
 
-/* Copyright (C) 2019 Jose E. Marchesi */
+/* Copyright (C) 2019, 2020 Jose E. Marchesi */
 
 /* This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,12 +161,14 @@ rest_of_compilation (pkl_compiler compiler,
   };
 
   void *middleend_payloads[]
-    = { &trans4_payload,
+    = { &fold_payload,
+        &trans4_payload,
         &analf_payload,
   };
 
   struct pkl_phase *middleend_phases[]
-    = { &pkl_phase_trans4,
+    = { &pkl_phase_fold,
+        &pkl_phase_trans4,
         &pkl_phase_analf,
         NULL
   };
@@ -220,7 +222,9 @@ rest_of_compilation (pkl_compiler compiler,
                     middleend_phases, middleend_payloads, PKL_PASS_F_TYPES))
     goto error;
 
-  if (trans4_payload.errors > 0)
+  if (trans4_payload.errors > 0
+      || fold_payload.errors > 0
+      || analf_payload.errors > 0)
     goto error;
 
   /* XXX */
@@ -686,7 +690,7 @@ pkl_ice (pkl_ast ast,
     int des;
     FILE *out;
 
-    if ((des = path_search (tmpfile, PATH_MAX, NULL, "poke", true) == -1)
+    if (((des = path_search (tmpfile, 1024, NULL, "poke", true)) == -1)
         || ((des = mkstemp (tmpfile)) == -1))
       {
         pk_term_class ("error");
@@ -736,8 +740,11 @@ pkl_ice (pkl_ast ast,
   pk_puts ("\n");
   pk_printf ("Important information has been dumped in %s.\n",
              tmpfile);
-  /* XXX hyperlink */
-  pk_puts ("Please attach it to a bug report and send it to bug-poke@gnu.org.\n");
+  pk_puts ("Please attach it to a bug report and send it to");
+  pk_term_hyperlink ("mailto:poke-devel@nongnu.org", NULL);
+  pk_puts (" poke-devel@nongnu.org");
+  pk_term_end_hyperlink ();
+  pk_puts (".\n");
 }
 
 int

@@ -2,7 +2,7 @@
 GNU Poke - TODO lists
 =====================
 
-Copyright (C) 2019 Jose E. Marchesi
+Copyright (C) 2019, 2020 Jose E. Marchesi
 See the end of the file for license conditions.
 
 NOTE: this file is not your typical abandoned TODO file that nobody
@@ -420,22 +420,6 @@ code from ``pkl_error`` and reuse it in ``pkl_warning`` without code
 duplication.
 
 It would be nice to have some tests too.
-
-#B0 remove hard limit in PKL_AST_MAX_POINTERS
----------------------------------------------
-
-The macro-assembler keeps an array of pointers to PVM values
-references in the routine being assembled.  This is needed because the
-PVM routines (which are Jitter routines) are allocated using the
-system malloc, whereas the PVM values are allocated using the Boehm
-GC.  See HACKING for more information about this.
-
-The current implementation relies in a constant PKL_AST_MAX_POINTERS
-for the size of the array, which is therefore constant.  An assert in
-``pkl_asm_new`` makes sure the array is not overflown.
-
-The goal of this task is to remove the hard limit on the size of the
-array: it should be reallocated should more pointers be needed.
 
 
 This file is part of GNU poke.

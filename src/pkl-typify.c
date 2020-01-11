@@ -1,6 +1,6 @@
 /* pkl-typify.c - Type handling phases for the poke compiler.  */
 
-/* Copyright (C) 2019 Jose E. Marchesi */
+/* Copyright (C) 2019, 2020 Jose E. Marchesi */
 
 /* This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@
 
 /* Roll out our own GCD from gnulib.  */
 #define WORD_T uint64_t
-#define GCD pkl_typify_gcd
+#define GCD typify_gcd
 #include <gcd.c>
 
 #define PKL_TYPIFY_PAYLOAD ((pkl_typify_payload) PKL_PASS_PAYLOAD)
@@ -163,6 +163,26 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_first_operand)
 }
 PKL_PHASE_END_HANDLER
 
+/* The unmap operator shall be applied to a type that is suitable to
+   be mapped.  */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_op_unmap)
+{
+  pkl_ast_node exp = PKL_PASS_NODE;
+  pkl_ast_node type = PKL_AST_TYPE (PKL_AST_EXP_OPERAND (exp, 0));
+
+  if (!pkl_ast_type_mappable_p (type))
+    {
+      PKL_ERROR (PKL_AST_LOC (PKL_AST_EXP_OPERAND (exp, 0)),
+                 "specified value cannot be mapped");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+
+  PKL_AST_TYPE (exp) = ASTREF (type);
+}
+PKL_PHASE_END_HANDLER
+
 /* The type of an ISA operation is a boolean.  Also, many ISA can be
    determined at compile-time.  */
 
@@ -222,6 +242,38 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_cast)
   pkl_ast_node exp = PKL_AST_CAST_EXP (cast);
   pkl_ast_node exp_type = PKL_AST_TYPE (exp);
 
+  /* Casting to ANY is always forbidden.  But casting from ANY is
+     always allowed.  */
+  if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_ANY)
+    {
+      PKL_ERROR (PKL_AST_LOC (cast),
+                 "casting a value to `any' is not allowed");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+
+  if (PKL_AST_TYPE_CODE (exp_type) == PKL_TYPE_ANY)
+    goto done;
+  
+  /* Casting from offset to offset is allowed, but not any other cast
+     involving offsets.  */
+  if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_OFFSET
+      && PKL_AST_TYPE_CODE (exp_type) != PKL_TYPE_OFFSET)
+    {
+      PKL_ERROR (PKL_AST_LOC (cast),
+                 "casting an offset value to a non-offset type is not allowed");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+
+  if (PKL_AST_TYPE_CODE (exp_type) == PKL_TYPE_OFFSET
+      && PKL_AST_TYPE_CODE (type) != PKL_TYPE_OFFSET)
+    {
+      PKL_ERROR (PKL_AST_LOC (cast),
+                 "casting a non-offset value to an offset type is not allowed");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
 
   /* Casting from or to a function type is forbidden.  */
   if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_FUNCTION)
@@ -240,18 +292,23 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_cast)
       PKL_PASS_ERROR;
     }
 
-  /* Casting to ANY is always forbidden.  But casting from ANY is
-     always allowed.  */
-  if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_ANY)
+  /* Casting from a struct type is forbidden.  */
+  if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_STRUCT)
     {
       PKL_ERROR (PKL_AST_LOC (cast),
-                 "casting a value to `any' is not allowed");
+                 "casting a value to a struct type is not allowed");
       PKL_TYPIFY_PAYLOAD->errors++;
       PKL_PASS_ERROR;
     }
 
-  if (PKL_AST_TYPE_CODE (exp_type) == PKL_TYPE_ANY)
-    goto done;
+  /* Casting a struct value is forbidden.  */
+  if (PKL_AST_TYPE_CODE (exp_type) == PKL_TYPE_STRUCT)
+    {
+      PKL_ERROR (PKL_AST_LOC (cast),
+                 "casting a struct value to any other type is not allowed");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
 
   /* Only characters (uint<8>) can be casted to string.  */
   if (PKL_AST_TYPE_CODE (type) == PKL_TYPE_STRING
@@ -265,6 +322,15 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_cast)
                  "invalid cast to string\nexpected uint<8>, got %s",
                  found_type);
       free (found_type);
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+
+  /* String values can't be casted to anything.  */
+  if (PKL_AST_TYPE_CODE (exp_type) == PKL_TYPE_STRING)
+    {
+      PKL_ERROR (PKL_AST_LOC (cast),
+                 "casting a string value to any other type is not allowed");
       PKL_TYPIFY_PAYLOAD->errors++;
       PKL_PASS_ERROR;
     }
@@ -415,13 +481,25 @@ TYPIFY_BIN (band);
       {                                                                 \
         pkl_ast_node unit_type_1 = PKL_AST_TYPE_O_UNIT (t1);            \
         pkl_ast_node unit_type_2 = PKL_AST_TYPE_O_UNIT (t2);            \
-        uint64_t t1_unit = PKL_AST_INTEGER_VALUE (unit_type_1);         \
-        uint64_t t2_unit = PKL_AST_INTEGER_VALUE (unit_type_2);         \
         pkl_ast_node unit_type                                          \
           = pkl_ast_make_integral_type (PKL_PASS_AST, 64, 0);           \
                                                                         \
-        pkl_ast_node unit = pkl_ast_make_integer (PKL_PASS_AST,         \
-                                                  pkl_typify_gcd (t1_unit, t2_unit)); \
+        pkl_ast_node unit;                                              \
+                                                                        \
+        if (PKL_AST_CODE (unit_type_1) == PKL_AST_INTEGER               \
+            && PKL_AST_CODE (unit_type_2) == PKL_AST_INTEGER)           \
+          {                                                             \
+            uint64_t result_unit =                                      \
+              typify_gcd (PKL_AST_INTEGER_VALUE (unit_type_1),          \
+                   PKL_AST_INTEGER_VALUE (unit_type_2));                \
+                                                                        \
+            unit = pkl_ast_make_integer (PKL_PASS_AST, result_unit);    \
+          }                                                             \
+        else                                                            \
+          unit = pkl_ast_make_binary_exp (PKL_PASS_AST,                 \
+                                          PKL_AST_OP_GCD,               \
+                                          unit_type_1, unit_type_2);    \
+                                                                        \
         PKL_AST_LOC (unit) = PKL_AST_LOC (exp);                         \
         PKL_AST_LOC (unit_type) = PKL_AST_LOC (exp);                    \
         PKL_AST_TYPE (unit) = ASTREF (unit_type);                       \
@@ -466,12 +544,19 @@ TYPIFY_BIN (mod);
     unit_type = pkl_ast_make_integral_type (PKL_PASS_AST, 64, 0);       \
     PKL_AST_LOC (unit_type) = PKL_AST_LOC (exp);                        \
                                                                         \
-    assert (PKL_AST_CODE (unit_type_1) == PKL_AST_INTEGER);             \
-    assert (PKL_AST_CODE (unit_type_2) == PKL_AST_INTEGER);             \
+    if (PKL_AST_CODE (unit_type_1) == PKL_AST_INTEGER                   \
+        && PKL_AST_CODE (unit_type_2) == PKL_AST_INTEGER)               \
+      {                                                                 \
+        uint64_t result_unit =                                          \
+          typify_gcd (PKL_AST_INTEGER_VALUE (unit_type_1),              \
+                      PKL_AST_INTEGER_VALUE (unit_type_2));             \
                                                                         \
-    unit = pkl_ast_make_integer (PKL_PASS_AST,                          \
-                                 pkl_typify_gcd (PKL_AST_INTEGER_VALUE (unit_type_1), \
-                                                 PKL_AST_INTEGER_VALUE (unit_type_2))); \
+        unit = pkl_ast_make_integer (PKL_PASS_AST, result_unit);        \
+      }                                                                 \
+    else                                                                \
+      unit = pkl_ast_make_binary_exp (PKL_PASS_AST,                     \
+                                      PKL_AST_OP_GCD,                   \
+                                      unit_type_1, unit_type_2);        \
                                                                         \
     PKL_AST_LOC (unit) = PKL_AST_LOC (exp);                             \
     PKL_AST_TYPE (unit) = ASTREF (unit_type);                           \
@@ -494,9 +579,9 @@ TYPIFY_BIN (sub);
 
 TYPIFY_BIN (add);
 
-/* MUL accepts integral, string and offset operands.  We can't use
-   TYPIFY_BIN here because it relies on a different logic to determine
-   the result type.  */
+/* MUL accepts integral and offset operands.  We can't use TYPIFY_BIN
+   here because it relies on a different logic to determine the result
+   type.  */
 
 PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_mul)
 {
@@ -557,7 +642,6 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_mul)
 
       switch (PKL_AST_TYPE_CODE (t1))
         {
-          CASE_STR
             CASE_INTEGRAL
         default:
           goto error;
@@ -1257,10 +1341,7 @@ PKL_PHASE_END_HANDLER
 /* The type of the r-value in an assignment statement should match the
    type of the l-value.
 
-#if 0
-   Also, the type of the l-value cannot be a function: function
-   variables in poke can't be assigned new values.  XXX: or yes?
-#endif
+   Also, if the l-value is a map, its type should be a simple type.
 */
 
 PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_ass_stmt)
@@ -1289,15 +1370,15 @@ expected %s got %s",
       PKL_PASS_ERROR;
     }
 
-#if 0
-  if (PKL_AST_TYPE_CODE (lvalue_type) == PKL_TYPE_FUNCTION)
+  if (PKL_AST_CODE (lvalue) == PKL_AST_MAP
+      && (PKL_AST_TYPE_CODE (lvalue_type) == PKL_TYPE_ARRAY
+          || PKL_AST_TYPE_CODE (lvalue_type) == PKL_TYPE_STRUCT))
     {
-      PKL_ERROR (PKL_AST_LOC (ass_stmt),
-                 "l-value in assignment cannot be a function");
+      PKL_ERROR (PKL_AST_LOC (PKL_AST_MAP_TYPE (lvalue)),
+                 "the map in l-value shall be of a simple type");
       PKL_TYPIFY_PAYLOAD->errors++;
       PKL_PASS_ERROR;
     }
-#endif
 }
 PKL_PHASE_END_HANDLER
 
@@ -1424,7 +1505,12 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_type_array)
 PKL_PHASE_END_HANDLER
 
 /* The type of a map is the type of the mapped value.  The expression
-   in a map should be an offset.  */
+   in a map should be an offset.
+
+   If present, the expression evaluating to the IOS of a map should be
+   an integer.
+
+   Not every time is mappeable.  Check for this here.  */
 
 PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_map)
 {
@@ -1432,13 +1518,34 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_map)
   pkl_ast_node map_type = PKL_AST_MAP_TYPE (map);
   pkl_ast_node map_offset = PKL_AST_MAP_OFFSET (map);
   pkl_ast_node map_offset_type = PKL_AST_TYPE (map_offset);
+  pkl_ast_node map_ios = PKL_AST_MAP_IOS (map);
 
+  if (!pkl_ast_type_mappable_p (map_type))
+    {
+      PKL_ERROR (PKL_AST_LOC (map_type),
+                 "specified type cannot be mapped");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+  
   if (PKL_AST_TYPE_CODE (map_offset_type) != PKL_TYPE_OFFSET)
     {
       PKL_ERROR (PKL_AST_LOC (map_offset),
                  "expected offset");
       PKL_TYPIFY_PAYLOAD->errors++;
       PKL_PASS_ERROR;
+    }
+
+  if (map_ios)
+    {
+      pkl_ast_node map_ios_type = PKL_AST_TYPE (map_ios);
+
+      if (PKL_AST_TYPE_CODE (map_ios_type) != PKL_TYPE_INTEGRAL)
+        {
+          PKL_ERROR (PKL_AST_LOC (map_ios), "expected integer expression");
+          PKL_TYPIFY_PAYLOAD->errors++;
+          PKL_PASS_ERROR;
+        }
     }
 
   PKL_AST_TYPE (map) = ASTREF (map_type);
@@ -1747,6 +1854,25 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_raise_stmt)
 }
 PKL_PHASE_END_HANDLER
 
+/* The expression used in a TRY-UNTIL statement should be a 32-bit
+   signed integer, which is the type currently used to denote an
+   exception type.  */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_try_until_stmt)
+{
+  pkl_ast_node try_until_stmt = PKL_PASS_NODE;
+  pkl_ast_node try_until_stmt_exp = PKL_AST_TRY_UNTIL_STMT_EXP (try_until_stmt);
+  pkl_ast_node exp_type = PKL_AST_TYPE (try_until_stmt_exp);
+
+  if (PKL_AST_TYPE_CODE (exp_type) != PKL_TYPE_INTEGRAL)
+    {
+      PKL_ERROR (PKL_AST_LOC (exp_type), "invalid exception number");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+}
+PKL_PHASE_END_HANDLER
+
 /* The argument to a TRY-CATCH statement, if specified, should be a
    32-bit signed integer, which is the type currently used to denote
    an exception type.
@@ -1910,6 +2036,11 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_attr)
       break;
     case PKL_AST_ATTR_MAPPED:
       /* The type of 'mapped is a boolean, int<32>  */
+      exp_type = pkl_ast_make_integral_type (PKL_PASS_AST, 32, 1);
+      PKL_AST_TYPE (exp) = ASTREF (exp_type);
+      break;
+    case PKL_AST_ATTR_IOS:
+      /* The type of 'mapped is an IOS descriptor, int<32>  */
       exp_type = pkl_ast_make_integral_type (PKL_PASS_AST, 32, 1);
       PKL_AST_TYPE (exp) = ASTREF (exp_type);
       break;
@@ -2077,6 +2208,42 @@ expected %s, got %s",
 }
 PKL_PHASE_END_HANDLER
 
+/* The base type in an offset type shall be an integral type.  */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_type_offset)
+{
+  pkl_ast_node offset_type = PKL_PASS_NODE;
+  pkl_ast_node base_type = PKL_AST_TYPE_O_BASE_TYPE (offset_type);
+
+  if (PKL_AST_TYPE_CODE (base_type) != PKL_TYPE_INTEGRAL)
+    {
+      PKL_ERROR (PKL_AST_LOC (base_type),
+                 "base type of offset types shall be integral");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+}
+PKL_PHASE_END_HANDLER
+
+/* The expression in an `if' statement should evaluate to an integral
+   type, as it is expected by the code generator.  */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_typify1_ps_if_stmt)
+{
+  pkl_ast_node if_stmt = PKL_PASS_NODE;
+  pkl_ast_node exp = PKL_AST_IF_STMT_EXP (if_stmt);
+  pkl_ast_node exp_type = PKL_AST_TYPE (exp);
+
+  if (PKL_AST_TYPE_CODE (exp_type) != PKL_TYPE_INTEGRAL)
+    {
+      PKL_ERROR (PKL_AST_LOC (exp),
+                 "expected boolean expression");
+      PKL_TYPIFY_PAYLOAD->errors++;
+      PKL_PASS_ERROR;
+    }
+}
+PKL_PHASE_END_HANDLER
+
 struct pkl_phase pkl_phase_typify1 =
   {
    PKL_PHASE_PR_HANDLER (PKL_AST_PROGRAM, pkl_typify_pr_program),
@@ -2102,8 +2269,10 @@ struct pkl_phase pkl_phase_typify1 =
    PKL_PHASE_PS_HANDLER (PKL_AST_PRINT_STMT, pkl_typify1_ps_print_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_RAISE_STMT, pkl_typify1_ps_raise_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_TRY_CATCH_STMT, pkl_typify1_ps_try_catch_stmt),
+   PKL_PHASE_PS_HANDLER (PKL_AST_TRY_UNTIL_STMT, pkl_typify1_ps_try_until_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_STRUCT_TYPE_FIELD, pkl_typify1_ps_struct_type_field),
    PKL_PHASE_PS_HANDLER (PKL_AST_RETURN_STMT, pkl_typify1_ps_return_stmt),
+   PKL_PHASE_PS_HANDLER (PKL_AST_IF_STMT, pkl_typify1_ps_if_stmt),
 
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_SIZEOF, pkl_typify1_ps_op_sizeof),
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_NOT, pkl_typify1_ps_op_not),
@@ -2130,12 +2299,13 @@ struct pkl_phase pkl_phase_typify1 =
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_NEG, pkl_typify1_ps_first_operand),
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_POS, pkl_typify1_ps_first_operand),
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_BNOT, pkl_typify1_ps_first_operand),
-   PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_UNMAP, pkl_typify1_ps_first_operand),
+   PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_UNMAP, pkl_typify1_ps_op_unmap),
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_BCONC, pkl_typify1_ps_op_bconc),
    PKL_PHASE_PS_OP_HANDLER (PKL_AST_OP_IN, pkl_typify1_ps_op_in),
 
    PKL_PHASE_PS_TYPE_HANDLER (PKL_TYPE_INTEGRAL, pkl_typify1_ps_type_integral),
    PKL_PHASE_PS_TYPE_HANDLER (PKL_TYPE_ARRAY, pkl_typify1_ps_type_array),
+   PKL_PHASE_PS_TYPE_HANDLER (PKL_TYPE_OFFSET, pkl_typify1_ps_type_offset),
   };
 
 
@@ -2152,7 +2322,7 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify2_ps_type)
 }
 PKL_PHASE_END_HANDLER
 
-/* Static array indexes should be bigger than 0.  */
+/* Static array indexes should be non-negative.  */
 
 PKL_PHASE_BEGIN_HANDLER (pkl_typify2_ps_type_array)
 {
@@ -2165,10 +2335,10 @@ PKL_PHASE_BEGIN_HANDLER (pkl_typify2_ps_type_array)
 
       if (PKL_AST_TYPE_CODE (bound_type) == PKL_TYPE_INTEGRAL
           && PKL_AST_CODE (bound) == PKL_AST_INTEGER
-          && ((int64_t) PKL_AST_INTEGER_VALUE (bound)) <= 0)
+          && ((int64_t) PKL_AST_INTEGER_VALUE (bound)) < 0)
         {
           PKL_ERROR (PKL_AST_LOC (bound),
-                     "array dimentions should be > 0");
+                     "array dimensions may not be negative");
           PKL_TYPIFY_PAYLOAD->errors++;
           PKL_PASS_ERROR;
         }
