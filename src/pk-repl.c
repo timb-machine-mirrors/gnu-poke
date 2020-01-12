@@ -95,35 +95,12 @@ poke_getc (FILE *stream)
 static void
 banner (void)
 {
-  if (!poke_quiet_p)
-    {
-      pk_print_version ();
-      pk_puts ("\n");
+      // static char *help_hyperlink = "TEST STRING";
 
-#if HAVE_HSERVER
-      pk_printf ("hserver listening in port %d.\n",
-                 pk_hserver_port ());
-      pk_puts ("\n");
-#endif
-
-#if HAVE_HSERVER
-      {
-        char *help_hyperlink
-          = pk_hserver_make_hyperlink ('e', ".help");
-
-        pk_puts (_("For help, type \""));
-        pk_term_hyperlink (help_hyperlink, NULL);
-        pk_puts (".help");
-        pk_term_end_hyperlink ();
-        pk_puts ("\".\n");
-        free (help_hyperlink);
-      }
-#else
-      pk_puts (_("For help, type \".help\".\n"));
-#endif
-      pk_puts (_("Type \".exit\" to leave the program.\n"));
-    }
-
+      pk_puts ("For help, type \"");
+      pk_term_hyperlink ("RUN THIS", NULL);
+      pk_puts (".help");
+      pk_term_end_hyperlink ();
 }
 
 static void

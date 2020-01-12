@@ -46,6 +46,7 @@ extern void pk_term_end_class (const char *class);
 
 /* Hyperlinks.  */
 void pk_term_hyperlink (const char *url, const char *id);
+void pk_term_hyperlink_foo (const int d);
 void pk_term_end_hyperlink (void);
 
 #endif /* PK_TERM_H */

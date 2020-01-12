@@ -130,9 +130,16 @@ pk_term_end_class (const char *class)
 }
 
 void
+pk_term_hyperlink_foo (const int d)
+{
+}
+
+void
 pk_term_hyperlink (const char *url, const char *id)
 {
+	pk_printf("%s\n", url);
 #ifdef HAVE_TEXTSTYLE_HYPERLINK_SUPPORT
+  pk_puts(" HYPERLINK> ");
   styled_ostream_set_hyperlink (poke_ostream, url, id);
 #endif
 }
@@ -142,6 +149,7 @@ pk_term_end_hyperlink (void)
 {
 #ifdef HAVE_TEXTSTYLE_HYPERLINK_SUPPORT
   styled_ostream_set_hyperlink (poke_ostream, NULL, NULL);
+  pk_puts(" <HYPERLINK");
 #endif
 }
 

@@ -202,7 +202,7 @@ print_info_file (ios io, void *data)
     char *cmd;
     char *hyperlink;
     
-    asprintf (&cmd, "0x%x#b", ios_tell (io));
+    asprintf (&cmd, "0x%lx#b", ios_tell (io));
     hyperlink = pk_hserver_make_hyperlink ('i', cmd);
     free (cmd);
     
