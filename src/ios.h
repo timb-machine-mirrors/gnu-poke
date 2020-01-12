@@ -106,11 +106,12 @@ typedef int64_t ios_off;
    The functions declared below are used to manage this
    collection.  */
 
-/* Open an IO space using a handler and make it the current space.
-   Return IOS_ERROR if there is an error opening the space (such as an
-   unrecognized handler), the ID of the new IOS otherwise.  */
+/* Open an IO space using a handler and if set_cur is set to 1, make
+   the newly opened IO space the current space.  Return IOS_ERROR if
+   there is an error opening the space (such as an unrecognized
+   handler), the ID of the new IOS otherwise.  */
 
-int ios_open (const char *handler);
+int ios_open (const char *handler, int set_cur);
 
 /* Close the given IO space, freing all used resources and flushing
    the space cache associated with the space.  */
@@ -158,11 +159,6 @@ ios ios_search (const char *handler);
    space exists.  */
 
 ios ios_search_by_id (int id);
-
-/* Return the Nth IO space.  If N is negative or bigger than the
-   number of IO spaces which are currently opened, return NULL.  */
-
-ios ios_get (int n);
 
 /* Return the ID of the given IO space.  */
 

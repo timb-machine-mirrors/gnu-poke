@@ -159,7 +159,7 @@ ios_shutdown (void)
 }
 
 int
-ios_open (const char *handler)
+ios_open (const char *handler, int set_cur)
 {
   struct ios *io = NULL;
   struct ios_dev_if **dev_if = NULL;
@@ -193,7 +193,8 @@ ios_open (const char *handler)
   io->next = io_list;
   io_list = io;
 
-  cur_io = io;
+  if (!cur_io || set_cur == 1)
+    cur_io = io;
 
   return io->id;
 
@@ -284,20 +285,6 @@ ios_search_by_id (int id)
   for (io = io_list; io; io = io->next)
     if (io->id == id)
       break;
-
-  return io;
-}
-
-ios
-ios_get (int n)
-{
-  ios io;
-
-  if (n < 0)
-    return NULL;
-
-  for (io = io_list; io && n > 0; n--, io = io->next)
-    ;
 
   return io;
 }
@@ -903,7 +890,7 @@ ios_read_string (ios io, ios_off offset, int flags, char **value)
 
       c = io->dev_if->get_c (io->dev);
       if (c == IOD_EOF)
-        str[i] = '\0';
+        return IOS_EIOFF;
       else
         str[i] = (char) c;
     }
@@ -1064,7 +1051,7 @@ ios_write_int_fast (ios io, int flags,
     }
 }
 
-int
+static inline int
 ios_write_int_common (ios io, ios_off offset, int flags,
 		      int bits,
 		      enum ios_endian endian,

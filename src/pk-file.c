@@ -94,7 +94,7 @@ pk_cmd_file (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
       ios io;
 
       io_id = PK_CMD_ARG_TAG (argv[0]);
-      io = ios_get (io_id);
+      io = ios_search_by_id (io_id);
       if (io == NULL)
         {
           pk_printf (_("No such file #%d\n"), io_id);
@@ -130,7 +130,7 @@ pk_cmd_file (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
         }
 
       errno = 0;
-      if (IOS_ERROR == ios_open (filename))
+      if (IOS_ERROR == ios_open (filename, 1))
 	{
 	  pk_printf (_("Error opening %s: %s\n"), filename,
 		     strerror (errno));
@@ -162,7 +162,7 @@ pk_cmd_close (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
     {
       int io_id = PK_CMD_ARG_TAG (argv[0]);
 
-      io = ios_get (io_id);
+      io = ios_search_by_id (io_id);
       if (io == NULL)
         {
           pk_printf (_("No such file #%d\n"), io_id);

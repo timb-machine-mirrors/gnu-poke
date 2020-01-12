@@ -1,3 +1,53 @@
+2020-01-12 Egeyar Bagcioglu <egeyar@gmail.com>
+
+	* src/ios.c (ios_get): Remove.
+	* src/ios.h (ios_get): Likewise.
+	* src/pk-file.c (pk_cmd_file): Replace the bogus call to ios_get
+	with ios_search_by_id.
+	(pk_cmd_close): Replace the bogus call to ios_get with
+	ios_search_by_id.
+
+2020-01-12  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* testsuite/poke.pkl/chars-1.pk: New file.
+	* testsuite/poke.pkl/chars-8.pk: Likewise.
+	* testsuite/poke.pkl/chars-7.pk: Likewise.
+	* testsuite/poke.pkl/chars-6.pk: Likewise.
+	* testsuite/poke.pkl/chars-5.pk: Likewise.
+	* testsuite/poke.pkl/chars-4.pk: Likewise.
+	* testsuite/poke.pkl/chars-3.pk: Likewise.
+	* testsuite/poke.pkl/chars-9.pk: Renamed from chars.pk
+
+2020-01-12  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* src/pkl-lex.l (CHAR): Allow '\r' as character literals.
+	* testsuite/poke.pkl/chars-2.pk: New file.
+
+2020-01-12  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* src/ios.c (ios_read_string): Fix detection of EOF.
+
+2020-01-12 Egeyar Bagcioglu <egeyar@gmail.com>
+
+	* src/ios.c (ios_open): Add argument set_cur to control making
+	the newly opened IO space the current IO space.
+	* src/ios.h (ios_open): Add the new argument, set_cur.
+	* src/poke.c (parse_args): Call ios_open with set_cur 1.
+	* src/pk-file.c (pk_cmd_file): Likewise.
+	* src/pvm.jitter (instruction open): Call ios_open with set_cur 0.
+	* testsuite/poke.pkl/close-1.pk: Adjust.
+	* testsuite/poke.pkl/set-ios-1.pk: Likewise.
+
+2020-01-12 Egeyar Bagcioglu <egeyar@gmail.com>
+
+	* src/pkl-gen.c (pkl_gen_ps_comp_stmt): Remove PKL_INSN_RETURN from
+	PKL_AST_BUILTIN_CLOSE which returns void.
+	* src/pvm.jitter (close): Add JITTER_DROP_STACK.
+
+2020-01-11 Egeyar Bagcioglu <egeyar@gmail.com>
+
+	* src/ios.c (ios_write_int_common): Add specifiers "static inline".
+
 2020-01-05  Jose E. Marchesi  <jemarch@gnu.org>
 
 	* src/ras: Stop claiming posix compatibility both as the current
