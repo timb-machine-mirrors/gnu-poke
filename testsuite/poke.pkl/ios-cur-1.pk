@@ -3,10 +3,10 @@
 /* { dg-command { .mem foo } } */
 /* { dg-command { .mem bar } } */
 /* { dg-command { byte @ 2#B = 20 } } */
-/* { dg-command { .ios #0 } } */
+/* { dg-command { .ios 0 } } */
 /* { dg-command { byte @ 2#B = 10 } } */
 /* { dg-command { byte @ 2#B } } */
 /* { dg-output "10UB" } */
-/* { dg-command { .ios #1 } } */
+/* { dg-command { .ios 1 } } */
 /* { dg-command { byte @ 2#B } } */
 /* { dg-output "\n20UB" } */

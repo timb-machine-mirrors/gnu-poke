@@ -36,19 +36,19 @@
 static int
 pk_cmd_ios (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 {
-  /* ios #ID */
+  /* ios ID */
 
   int io_id;
   pk_ios io;
 
   assert (argc == 1);
-  assert (PK_CMD_ARG_TYPE (argv[0]) == PK_CMD_ARG_TAG);
+  assert (PK_CMD_ARG_TYPE (argv[0]) == PK_CMD_ARG_INT);
 
-  io_id = PK_CMD_ARG_TAG (argv[0]);
+  io_id = PK_CMD_ARG_INT (argv[0]);
   io = pk_ios_search_by_id (poke_compiler, io_id);
   if (io == NULL)
     {
-      pk_printf (_("No IOS with tag #%d\n"), io_id);
+      pk_printf (_("No IOS with id %d\n"), io_id);
       return 0;
     }
 
@@ -81,7 +81,7 @@ pk_cmd_file (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 
   if (pk_ios_search (poke_compiler, filename) != NULL)
     {
-      printf (_("File %s already opened.  Use `.ios #N' to switch.\n"),
+      printf (_("File %s already opened.  Use `.ios N' to switch.\n"),
               filename);
       return 0;
     }
@@ -104,7 +104,7 @@ pk_cmd_file (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 static int
 pk_cmd_close (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 {
-  /* close [#ID]  */
+  /* close [ID]  */
   pk_ios io;
   int changed;
 
@@ -114,12 +114,12 @@ pk_cmd_close (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
     io = pk_ios_cur (poke_compiler);
   else
     {
-      int io_id = PK_CMD_ARG_TAG (argv[0]);
+      int io_id = PK_CMD_ARG_INT (argv[0]);
 
       io = pk_ios_search_by_id (poke_compiler, io_id);
       if (io == NULL)
         {
-          pk_printf (_("No such file #%d\n"), io_id);
+          pk_printf (_("No IO device with ID %d\n"), io_id);
           return 0;
         }
     }
@@ -130,11 +130,11 @@ pk_cmd_close (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
   if (changed)
     {
       if (pk_ios_cur (poke_compiler) == NULL)
-        puts (_("No more IO spaces."));
+        puts (_("No more IO devices."));
       else
         {
           if (poke_interactive_p && !poke_quiet_p)
-            pk_printf (_("The current file is now `%s'.\n"),
+            pk_printf (_("The current IO device is `%s' now.\n"),
                        pk_ios_handler (pk_ios_cur (poke_compiler)));
         }
     }
@@ -151,7 +151,7 @@ print_info_ios (pk_ios io, void *data)
   mode[1] = flags & PK_IOS_F_WRITE ? 'w' : ' ';
   mode[2] = '\0';
 
-  pk_printf ("%s#%d\t%s\t",
+  pk_printf ("%s%d\t%s\t",
              io == pk_ios_cur (poke_compiler) ? "* " : "  ",
              pk_ios_get_id (io),
              mode);
@@ -181,7 +181,7 @@ print_info_ios (pk_ios io, void *data)
     char *cmd;
     char *hyperlink;
 
-    asprintf (&cmd, ".ios #%d", pk_ios_get_id (io));
+    asprintf (&cmd, ".ios %d", pk_ios_get_id (io));
     hyperlink = pk_hserver_make_hyperlink ('e', cmd);
     free (cmd);
 
@@ -275,7 +275,7 @@ pk_cmd_mem (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 
   if (pk_ios_search (poke_compiler, mem_name) != NULL)
     {
-      printf (_("Buffer %s already opened.  Use `.ios #N' to switch.\n"),
+      printf (_("Buffer %s already opened.  Use `.ios N' to switch.\n"),
               mem_name);
       free (mem_name);
       return 0;
@@ -312,7 +312,7 @@ pk_cmd_nbd (int argc, struct pk_cmd_arg argv[], uint64_t uflags)
 
   if (pk_ios_search (poke_compiler, nbd_name) != NULL)
     {
-      printf (_("Buffer %s already opened.  Use `.ios #N' to switch.\n"),
+      printf (_("Buffer %s already opened.  Use `.ios ID' to switch.\n"),
               nbd_name);
       free (nbd_name);
       return 0;
@@ -340,7 +340,7 @@ ios_completion_function (const char *x, int state)
 }
 
 const struct pk_cmd ios_cmd =
-  {"ios", "t", "", 0, NULL, pk_cmd_ios, "ios #ID", ios_completion_function};
+  {"ios", "i", "", 0, NULL, pk_cmd_ios, "ios ID", ios_completion_function};
 
 const struct pk_cmd file_cmd =
   {"file", "f", "", 0, NULL, pk_cmd_file, "file FILE-NAME", rl_filename_completion_function};
@@ -354,7 +354,7 @@ const struct pk_cmd nbd_cmd =
 #endif
 
 const struct pk_cmd close_cmd =
-  {"close", "?t", "", PK_CMD_F_REQ_IO, NULL, pk_cmd_close, "close [#ID]", ios_completion_function};
+  {"close", "?i", "", PK_CMD_F_REQ_IO, NULL, pk_cmd_close, "close [ID]", ios_completion_function};
 
 const struct pk_cmd info_ios_cmd =
   {"ios", "", "", 0, NULL, pk_cmd_info_ios, "info ios", NULL};

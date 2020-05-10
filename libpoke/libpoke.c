@@ -268,7 +268,7 @@ pk_ios_completion_function (pk_compiler pkc __attribute__ ((unused)),
         break;
 
       char buf[16];
-      snprintf (buf, 16, "#%d", ios_get_id (io));
+      snprintf (buf, 16, "%d", ios_get_id (io));
 
       int match = strncmp (buf, text, len);
       if (match != 0)
