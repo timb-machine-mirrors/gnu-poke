@@ -1,5 +1,10 @@
 2020-07-12  Jose E. Marchesi  <jemarch@gnu.org>
 
+	* libpoke/pkl-insn.def: New instruction FLUSH.
+	* libpoke/pvm.jitter (flush): Likewise.
+
+2020-07-12  Jose E. Marchesi  <jemarch@gnu.org>
+
 	* libpoke/pkl-tab.y: New token FORGET.
 	(stmt): Rule for statement `forget'.
 	* libpoke/pkl-lex.l: Recognize token FORGET.
