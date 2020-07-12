@@ -1757,6 +1757,25 @@ pkl_ast_make_raise_stmt (pkl_ast ast, pkl_ast_node exp)
   return raise_stmt;
 }
 
+/* Build and return an AST node for a `forget' statement.  */
+
+pkl_ast_node
+pkl_ast_make_forget_stmt (pkl_ast ast, pkl_ast_node ios_exp,
+                          pkl_ast_node offset_exp)
+{
+  pkl_ast_node forget_stmt = pkl_ast_make_node (ast,
+                                                PKL_AST_FORGET_STMT);
+
+  assert (ios_exp && offset_exp);
+
+  PKL_AST_FORGET_STMT_IOS_EXP (forget_stmt)
+    = ASTREF (ios_exp);
+  PKL_AST_FORGET_STMT_OFFSET_EXP (forget_stmt)
+    = ASTREF (offset_exp);
+
+  return forget_stmt;
+}
+
 /* Build and return an AST node for a PKL program.  */
 
 pkl_ast_node
@@ -2147,6 +2166,12 @@ pkl_ast_node_free (pkl_ast_node ast)
       pkl_ast_node_free (PKL_AST_RAISE_STMT_EXP (ast));
       break;
 
+    case PKL_AST_FORGET_STMT:
+
+      pkl_ast_node_free (PKL_AST_FORGET_STMT_IOS_EXP (ast));
+      pkl_ast_node_free (PKL_AST_FORGET_STMT_OFFSET_EXP (ast));
+      break;
+
     case PKL_AST_NULL_STMT:
       break;
 
@@ -2264,6 +2289,7 @@ pkl_ast_finish_breaks_1 (pkl_ast_node entity, pkl_ast_node stmt,
     case PKL_AST_ASS_STMT:
     case PKL_AST_PRINT_STMT:
     case PKL_AST_RAISE_STMT:
+    case PKL_AST_FORGET_STMT:
     /* XXX: Add switch statements here.  */
     case PKL_AST_NULL_STMT:
       break;
@@ -2351,6 +2377,7 @@ pkl_ast_finish_returns_1 (pkl_ast_node function, pkl_ast_node stmt,
     case PKL_AST_PRINT_STMT:
     case PKL_AST_BREAK_STMT:
     case PKL_AST_RAISE_STMT:
+    case PKL_AST_FORGET_STMT:
     case PKL_AST_NULL_STMT:
       break;
     default:
@@ -2935,6 +2962,14 @@ pkl_ast_print_1 (FILE *fp, pkl_ast_node ast, int indent)
 
       PRINT_COMMON_FIELDS;
       PRINT_AST_SUBAST (raise_stmt_exp, RAISE_STMT_EXP);
+      break;
+
+    case PKL_AST_FORGET_STMT:
+      IPRINTF ("FORGET_STMT::\n");
+
+      PRINT_COMMON_FIELDS;
+      PRINT_AST_SUBAST (ios_exp, FORGET_STMT_IOS_EXP);
+      PRINT_AST_SUBAST (offset_exp, FORGET_STMT_OFFSET_EXP);
       break;
 
     case PKL_AST_NULL_STMT:

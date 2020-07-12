@@ -1,0 +1,3 @@
+/* { dg-do compile } */
+
+forget 2 + 3, 4; /* { dg-error "expected.*offset" } */

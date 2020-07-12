@@ -335,6 +335,7 @@ token <integer> UNION    _("keyword `union'")
 %token PRINT             _("keyword `print'")
 %token PRINTF            _("keyword `printf'")
 %token LOAD              _("keyword `load'")
+%token FORGET            _("keyword `forget'")
 %token BUILTIN_RAND BUILTIN_GET_ENDIAN BUILTIN_SET_ENDIAN
 %token BUILTIN_GET_IOS BUILTIN_SET_IOS BUILTIN_OPEN BUILTIN_CLOSE
 %token BUILTIN_IOSIZE BUILTIN_GETENV
@@ -1986,6 +1987,12 @@ stmt:
                   PKL_AST_LOC ($3) = @3;
                   if (PKL_AST_TYPE ($3))
                     PKL_AST_LOC (PKL_AST_TYPE ($3)) = @3;
+                  PKL_AST_LOC ($$) = @$;
+                }
+        | FORGET expression ',' expression ';'
+                {
+                  $$ = pkl_ast_make_forget_stmt (pkl_parser->ast,
+                                                 $2, $4);
                   PKL_AST_LOC ($$) = @$;
                 }
         | funcall_stmt ';'

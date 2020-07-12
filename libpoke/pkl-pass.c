@@ -506,6 +506,10 @@ pkl_do_pass_1 (pkl_compiler compiler,
       if (PKL_AST_RAISE_STMT_EXP (node))
         PKL_PASS (PKL_AST_RAISE_STMT_EXP (node));
       break;
+    case PKL_AST_FORGET_STMT:
+      PKL_PASS (PKL_AST_FORGET_STMT_IOS_EXP (node));
+      PKL_PASS (PKL_AST_FORGET_STMT_OFFSET_EXP (node));
+      break;
     case PKL_AST_PRINT_STMT_ARG:
       if (PKL_AST_PRINT_STMT_ARG_EXP (node))
         PKL_PASS (PKL_AST_PRINT_STMT_ARG_EXP (node));

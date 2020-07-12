@@ -1093,6 +1093,28 @@ PKL_PHASE_BEGIN_HANDLER (pkl_promo_ps_return_stmt)
 }
 PKL_PHASE_END_HANDLER
 
+/* Promote arguments to forget.  */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_promo_ps_forget_stmt)
+{
+  pkl_ast_node stmt = PKL_PASS_NODE;
+  int restart = 0;
+
+  /* The IOS argument shall be an int<32>  */
+  if (!promote_integral (PKL_PASS_AST,
+                         32, 1,
+                         &PKL_AST_FORGET_STMT_IOS_EXP (stmt),
+                         &restart))
+    {
+      PKL_ICE (PKL_AST_LOC (stmt),
+               "couldn't promote ios in forget statement");
+      PKL_PASS_ERROR;
+    }
+
+  PKL_PASS_RESTART = restart;
+}
+PKL_PHASE_END_HANDLER
+
 /* Promote arguments to printf.  */
 
 PKL_PHASE_BEGIN_HANDLER (pkl_promo_ps_print_stmt)
@@ -1657,6 +1679,7 @@ struct pkl_phase pkl_phase_promo
    PKL_PHASE_PS_HANDLER (PKL_AST_ASS_STMT, pkl_promo_ps_ass_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_RETURN_STMT, pkl_promo_ps_return_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_PRINT_STMT, pkl_promo_ps_print_stmt),
+   PKL_PHASE_PS_HANDLER (PKL_AST_FORGET_STMT, pkl_promo_ps_forget_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_STRUCT_TYPE_FIELD, pkl_promo_ps_struct_type_field),
    PKL_PHASE_PS_HANDLER (PKL_AST_COND_EXP, pkl_promo_ps_cond_exp),
    PKL_PHASE_PS_HANDLER (PKL_AST_SCONS, pkl_promo_ps_scons),

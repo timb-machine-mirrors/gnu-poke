@@ -219,6 +219,7 @@ S ::
 "any"                { return ANY; }
 "print"                { return PRINT; }
 "printf"        { return PRINTF; }
+"forget"        { return FORGET; }
 "isa"                { return ISA; }
 "unmap"                { return UNMAP; }
 "big"                { return BIG; }

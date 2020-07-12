@@ -1,5 +1,29 @@
 2020-07-12  Jose E. Marchesi  <jemarch@gnu.org>
 
+	* libpoke/pkl-tab.y: New token FORGET.
+	(stmt): Rule for statement `forget'.
+	* libpoke/pkl-lex.l: Recognize token FORGET.
+	* libpoke/pkl-ast.h (enum pkl_ast_code): New entry
+	PKL_AST_FORGET_STMT.
+	(struct pkl_ast_forget_stmt): Define.
+	(PKL_AST_FORGET_STMT_IOS_EXP): Define.
+	(PKL_AST_FORGET_STMT_OFFSET_EXP): Likewise.
+	(union pkl_ast_node): New field forget_stmt.
+	* libpoke/pkl-ast.c (pkl_ast_make_forget_stmt): Define.
+	(pkl_ast_node_free): Hanel forget statements.
+	(pkl_ast_finish_breaks_1): Likewise.
+	(pkl_ast_finish_returns_1): Likewise.
+	(pkl_ast_print_1): Likewise.
+	* libpoke/pkl-pass.c (pkl_do_pass_1): Likewise.
+	* libpoke/pkl-typify.c (pkl_typify1_ps_forget_stmt): New handler.
+	(pkl_phase_typify1): Install handler.
+	* libpoke/pkl-promo.c (pkl_promo_ps_forget_stmt): New handler.
+	(pkl_phase_promo): Install handler.
+	* testsuite/poke.pkl/forget-diag-1.pk: New test.
+	* testsuite/poke.pkl/forget-diag-2.pk: Likewise.
+
+2020-07-12  Jose E. Marchesi  <jemarch@gnu.org>
+
 	* libpoke/pk-val.c: Remove trailing whitespace.
 	* libpoke/libpoke.h: Likewise.
 	* etc/pk-mi-json-schema.json: Add missing newline at EOF.

@@ -83,7 +83,8 @@ enum pkl_ast_code
   PKL_AST_PRINT_STMT,
   PKL_AST_BREAK_STMT,
   PKL_AST_RAISE_STMT,
-  PKL_AST_LAST_STMT = PKL_AST_RAISE_STMT,
+  PKL_AST_FORGET_STMT,
+  PKL_AST_LAST_STMT = PKL_AST_FORGET_STMT,
   PKL_AST_PRINT_STMT_ARG,
   PKL_AST_LAST
 };
@@ -1746,6 +1747,29 @@ struct pkl_ast_raise_stmt
 pkl_ast_node pkl_ast_make_raise_stmt (pkl_ast ast, pkl_ast_node exp)
   __attribute__ ((visibility ("hidden")));
 
+/* PKL_AST_FORGET_STMT nodes represent `forget' statements, which are
+   used to operate on IO spaces.
+
+   IOS_EXP is an expression that should evaluate to an IOS identifier,
+   i.e. a signed 32-bit integer.
+
+   OFFSET_EXP is an expression that should evalute to an offset.  */
+
+#define PKL_AST_FORGET_STMT_IOS_EXP(AST) ((AST)->forget_stmt.ios_exp)
+#define PKL_AST_FORGET_STMT_OFFSET_EXP(AST) ((AST)->forget_stmt.offset_exp)
+
+struct pkl_ast_forget_stmt
+{
+  struct pkl_ast_common common;
+
+  union pkl_ast_node *ios_exp;
+  union pkl_ast_node *offset_exp;
+};
+
+pkl_ast_node pkl_ast_make_forget_stmt (pkl_ast ast, pkl_ast_node ios_exp,
+                                       pkl_ast_node offset_exp)
+  __attribute__ ((visibility ("hidden")));
+
 /* Finally, the `pkl_ast_node' type, which represents an AST node of
    any type.  */
 
@@ -1799,6 +1823,7 @@ union pkl_ast_node
   struct pkl_ast_raise_stmt raise_stmt;
   struct pkl_ast_print_stmt print_stmt;
   struct pkl_ast_print_stmt_arg print_stmt_arg;
+  struct pkl_ast_forget_stmt forget_stmt;
 };
 
 /* The `pkl_ast' struct defined below contains a PKL abstract syntax tree.
