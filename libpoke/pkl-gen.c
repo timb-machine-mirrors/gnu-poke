@@ -1076,6 +1076,22 @@ PKL_PHASE_BEGIN_HANDLER (pkl_gen_ps_raise_stmt)
 PKL_PHASE_END_HANDLER
 
 /*
+ * | [IOS_EXP]
+ * | [OFFSET_EXP]
+ * FORGET_EXP
+ */
+
+PKL_PHASE_BEGIN_HANDLER (pkl_gen_ps_forget_stmt)
+{
+  /* Convert the offset into a bit-offset.  The offset is guaranteed
+     to be ulong<64> with unit bits, as per promo.  */
+  pkl_asm_insn (PKL_GEN_ASM, PKL_INSN_OGETM); /* IOS OFF OFFM */
+  pkl_asm_insn (PKL_GEN_ASM, PKL_INSN_NIP);   /* IOS OFFM */
+  pkl_asm_insn (PKL_GEN_ASM, PKL_INSN_FLUSH); /* _ */
+}
+PKL_PHASE_END_HANDLER
+
+/*
  * | CODE
  * | EXP
  * TRY_UNTIL_STMT
@@ -3395,6 +3411,7 @@ struct pkl_phase pkl_phase_gen
    PKL_PHASE_PS_HANDLER (PKL_AST_EXP_STMT, pkl_gen_ps_exp_stmt),
    PKL_PHASE_PR_HANDLER (PKL_AST_PRINT_STMT, pkl_gen_pr_print_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_RAISE_STMT, pkl_gen_ps_raise_stmt),
+   PKL_PHASE_PS_HANDLER (PKL_AST_FORGET_STMT, pkl_gen_ps_forget_stmt),
    PKL_PHASE_PR_HANDLER (PKL_AST_TRY_CATCH_STMT, pkl_gen_pr_try_catch_stmt),
    PKL_PHASE_PR_HANDLER (PKL_AST_TRY_UNTIL_STMT, pkl_gen_pr_try_until_stmt),
    PKL_PHASE_PS_HANDLER (PKL_AST_FUNCALL_ARG, pkl_gen_ps_funcall_arg),

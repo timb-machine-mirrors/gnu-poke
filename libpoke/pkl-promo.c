@@ -1111,6 +1111,26 @@ PKL_PHASE_BEGIN_HANDLER (pkl_promo_ps_forget_stmt)
       PKL_PASS_ERROR;
     }
 
+  /* Promote the OFFSET argument to an offset<ulong<64>,1>.  */
+  {
+    int lrestart = 0;
+    pkl_ast_node unit_bit = pkl_ast_make_integer (PKL_PASS_AST, 1);
+
+    ASTREF (unit_bit);
+    if (!promote_offset (PKL_PASS_AST,
+                         64, 0, unit_bit,
+                         &PKL_AST_FORGET_STMT_OFFSET_EXP (stmt),
+                         &lrestart))
+      {
+        PKL_ICE (PKL_AST_LOC (stmt),
+                 "couldn't promote offset in forget statement");
+        PKL_PASS_ERROR;
+      }
+
+    restart |= lrestart;
+    pkl_ast_node_free (unit_bit);
+  }
+
   PKL_PASS_RESTART = restart;
 }
 PKL_PHASE_END_HANDLER
