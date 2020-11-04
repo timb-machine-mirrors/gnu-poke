@@ -1,0 +1,925 @@
+
+/* Copyright (C) 2020, Mohammad-Reza Nabipoor */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+
+/* GNU poke is an interactive editor for binary data. But it's not just an
+ * editor, it provides a full-fledged procedural, interactive programming
+ * language designed to describe data structures and to operate on them.
+ * The programming language is called Poke (with upper-case P).
+ *
+ * When the user have a description of binary data (a *pickle*), he/she
+ * can *map* it on the actual data and start poking the data! The user can
+ * inspect and modify data.
+ */
+
+/* First start with nomenclature:
+ *
+ *   - poke      The editor program (also called GNU poke)
+ *   - Poke      Domain-specific programming language that used by `poke`
+ *   - pickle    A logical component that provides a set of (related)
+ *               functionalities (e.g., description of a binary format or
+ *               utilities to deal with date and time, etc.).
+ *               Pickles are defined in files with `.pk` extension.
+ */
+
+/* Let's talk about the Poke! */
+
+/* Variables
+ *
+ * We can define variables in Poke using `defvar` keyword:
+ *
+ *   defvar NAME_OF_VARIABLE = VALUE
+ */
+
+defvar an_integer = 10;
+defvar a_string = "hello, poke users!";
+
+/* Values
+ *
+ * Poke programming language has the following types of value:
+ *
+ *   - Integer
+ *   - String
+ *   - Offset
+ *   - Array
+ *   - Struct
+ *   - Union
+ *
+ * There are two categories of values in Poke:
+ *   - Simple values
+ *     - Integer
+ *     - String
+ *     - Offset
+ *   - Composite values
+ *     - Array
+ *     - Struct
+ *     - Union
+ *
+ * The difference lies in the semantics of copy. Consider the following `C`
+ * prgoram:
+ *
+ *   ```c
+ *   void f(int);
+ *   void g(int*);
+ *
+ *   int main() {
+ *     int i = 10;
+ *
+ *     f(i);  // sends a copy of **value of** `i` to `f`
+ *     g(&i); // sends a copy of **address of** `i` to `g`
+ *
+ *     return 0;
+ *   }
+ *   ```
+ *
+ * Simple values in Poke are like `int` in `C`. The copy makes a new disjoint
+ * value. Changing the copied value will not change the original one.
+ * And composite values are like `int*` in `C`. The new copy will also points
+ * to the same data.
+ */
+
+
+/* Integer values */
+defvar decimal = 10;
+defvar hexadecimal = 0xff;
+defvar binary = 0b1100;
+defvar octal = 0o777;
+
+defvar si8  = 1B;     /* byte (8-bit)  */
+defvar si16 = 2H;     /* byte (16-bit) */
+defvar si32 = 3;      /* int  (32-bit) */
+defvar si64 = 4L;     /* long (64-bit) */
+
+defvar ui8  = 4UB;    /* unsigned byte (8-bit)  */
+defvar ui16 = 5UH;    /* unsigned int  (16-bit) */
+defvar ui32 = 6U;     /* unsigned int  (32-bit) */
+defvar ui64 = 7UL;    /* unsigned long (64-bit) */
+
+defvar long_decimal = 100_000_000;
+defvar long_hexadecimal = 0x1122_aabb_ccdd_eeff;
+
+/* Operations on integer values */
+
+/* Arithmetic */
+defvar ia1 = 10 ** 2;    /* exponentiation -- ia1 == 100 */
+defvar ia2 = 5 * 7;      /* multiplication -- ia2 == 35  */
+defvar ia3 = 17 / 4;     /* division       -- ia3 == 4   */
+defvar ia4 = 17 /^ 4;    /* ceil-division  -- ia4 == 5   */
+defvar ia5 = 25 % 7;     /* modulus        -- ia5 == 4   */
+/* There are also addition (`+`) and subtraction (`-`) operators */
+
+/* Bitwise
+ *
+ * Poke has the following left-associative binary bitwise operators:
+ *   - Logical shifts (`<<.`, and `.>>`)
+ *   - AND (`&`)
+ *   - XOR (`^`)
+ *   - OR (`|`)
+ *   - Bitwise concatenation (`:::`)
+ *
+ * Right-associative unary bitwise operator:
+ *   - Bitwise complement (`~`)
+ *
+ * NOTE There's not arithmetic right-shifting operator in Poke.
+ */
+defvar ib1 = 1 <<. 10;             /* ib1 == 1024     */
+defvar ib2 = 1024 .>> 9;           /* ib2 == 2        */
+defvar ib3 = 0x12UB ::: 0x34UB;    /* ib3 == 0x1234UH */
+defvar ib4 = ~0x0fUB;              /* ib4 == 0xf0UB */
+
+
+/* String values (null-terminated) */
+defvar foobar_string = "foo\nbar";
+defvar empty_string = "";
+
+
+/* Offset values
+ *
+ * Poke does not using integers to specify offsets in binary data, it has a
+ * primitive type for that: offset!
+ *
+ * Offsets have two parts:
+ *  - magnitude (an integer)
+ *  - unit      (b (bit), byte (B), etc.)
+ *
+ * Offsets are also useful for specifying the size.
+ */
+
+/* Offsets with named units */
+defvar off_8_bits     = 8#b;
+defvar off_23_bytes   = 23#B;
+defvar off_2000_bits  = 2#Kb;
+defvar off_2000_bytes = 2#KB;
+defvar off_3_nibbles  = 3#N;    /* 3 nibbles (each nibble is 4 bits) */
+
+defvar off_1_byte = #B;   /* You can omit magnitude if it's 1 */
+
+/* Offsets with numeric units */
+defvar off_8_8 = 8#8;    /* magnitude: 8, unit: 8 bits */
+defvar off_2_3 = 2#3;    /* magnitude: 2, unit: 3 bits */
+
+/* Offset arithmetic
+ *
+ * OFF +- OFF -> OFF
+ * OFF *  INT -> OFF
+ * OFF /  OFF -> INT
+ * OFF /^ OFF -> INT
+ * OFF %  OFF -> OFF
+ */
+defvar off_1_plus_2   = 1#B +  2#B;    /* 3#B  */
+defvar off_1_minus_2  = 1#B -  2#B;    /* -1#B */
+defvar off_8_times_10 = 8#B *  10;     /* 80#B */
+defvar off_10_times_8 = 10  *  8#B;    /* 80#B */
+defvar off_7_div_1    = 7#B /  1#B;    /* 7    */  /* This is an integer */
+defvar off_7_cdiv_2   = 7#B /^ 2#B;    /* 4    */  /* This is an integer */
+defvar off_7_mod_3    = 7#B %  3#B;    /* 1#B  */
+
+/* The following units are pre-defined in Poke:
+ *
+ *   b, N, B, Kb, KB, Mb, MB, Gb, GB, Kib, KiB, Mib, MiB, Gib, GiB
+ *
+ * Poke supports user-defined units using `defunit` construction:
+ *
+ *   defunit NAME = CONSTANT_EXPRESSION;
+ */
+defunit BIT = 1;
+defunit NIBBLE = 4;
+defunit kilobit = 10 ** 3;
+defunit kilobyte = 10 ** 3 * 8;
+
+defvar off_bit    = 10#BIT;      /* off_bit == 10#b                         */
+defvar off_nibble = 4#NIBBLE;    /* off_nibble == 4#N && off_nibble == 16#b */
+defvar off_kb = 1#kilobit;       /* off_kb == 1#Kb && off_kb == 1000#b      */
+defvar off_kB = 2#kilobyte;      /* off_kB == 2#KB && off_kB == 16000#b     */
+
+
+/* Array values */
+defvar arr1 = [1, 2, 3];
+defvar arr2 = [[1, 2], [3, 4]];
+
+defvar elem10 = arr1[0];    /* Arrays are indexed using the usual notation */
+defvar elem12 = arr1[2];    /* This is the last element of `arr1`: 3 */
+
+/* If you try to access elements beyond the bounds, you'll get an
+ * `E_out_of_bound_exception` exception.
+ */
+/* defvar elem1x = arr1[3]; */
+/* defvar elem1y = arr1[-1]; */
+
+/* Array trimming: Extraction of a subset of the array */
+defvar arr3 = arr1[0:1];  /* arr3 == [arr1[0], arr1[1]] */
+defvar arr4 = arr1[0:0];  /* arr4 == [arr1[0]] */
+
+/* Array is a "composite value"; It behaves like pointers on copy.
+ * The underlying data is shared between `arr1` and `arr5`.
+ */
+defvar arr5 = arr1;
+arr5[0] = -1;    /* arr1 == [-1, 2, 3] */
+
+/* Array trimming *makes* a new array with *copies* of the selected data */
+defvar arr6 = arr1[:];
+defvar arr7 = arr2[:];
+arr6[0] = 1;        /* arr6 == [1, 2, 3] && arr1 == [-1, 2, 3] */
+arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
+
+
+/* Types
+ *
+ * Before talking about `struct` values, it'd be nice to first talk about types
+ * in Poke.
+ */
+
+/* Integer types
+ *
+ * Most general-purpose programming languages provide a small set of integer
+ * types. Poke, on the contrary, provides a rich set of integer types featuring
+ * different widths, in both signed and unsigned variants.
+ *
+ * `int<N>` is a signed integer with `N`-bit width. `N` can be an integer
+ * literal in the range `[1, 64]`.
+ *
+ * `uint<N>` is the unsigned variant.
+ *
+ * Examples:
+ *
+ *    uint<1>
+ *    uint<7>
+ *    int<64>
+ */
+
+/* String type
+ *
+ * There is one string type in Poke: `string`
+ * Strings in Poke are null-terminated.
+ */
+
+/* Array types
+ *
+ * There are three kinds of array types:
+ *
+ *   - Unbounded: arrays that have no explicit boundaries, like `int<32>[]`
+ *   - Bounded by number of elements, like `int<64>[10]`
+ *   - Bounded by size, like `uint<32>[8#B]`
+ */
+
+/* Offset types
+ *
+ * Offset types are denoted as `offset<BASE_TYPE,UNIT>`, where BASE_TYPE is
+ * an integer type and UNIT the specification of an unit.
+ *
+ * Examples:
+ *
+ *   offset<int<32>,B>
+ *   offset<uint<12>,Kb>
+ */
+
+/* Struct types
+ *
+ * Structs are the main abstraction that Poke provides to structure data. A
+ * collection of heterogeneous values.
+ *
+ * And there's no padding or alignment between the fields of structs.
+ * In other words: WYPIWYG (What You Poke Is What You Get)!
+ *
+ * Examples:
+ *
+ *   struct {
+ *     uint<32> i32;
+ *     uint<64> i64;
+ *   }
+ *
+ *   struct {
+ *     uint<16> flags;
+ *     uint<8>[32] data;
+ *   }
+ *
+ *   struct {
+ *     int<32> code;
+ *     string msg;
+ *     int<32> exit_status;
+ *   }
+ */
+
+
+/* User-declared types
+ *
+ * There's a mechanism to declare new types:
+ *
+ *   deftype NAME = TYPE;
+ *
+ * where NAME is the name of the new type, and TYPE is either a type specifier
+ * or the name of some other type.
+ *
+ * The supported type specifiers are integral types, string type, array types,
+ * struct types, function types, and `any` (The `any` type is used to
+ * implement polymorphism).
+ */
+
+deftype Bit   = uint<1>;
+deftype Int   = int<32>;
+deftype Ulong = uint<64>;
+
+deftype String = string;    /* Just to show that this is possible! */
+
+deftype Buffer  = uint<8>[];        /* Unbounded array of type uint<8> */
+deftype Triple  = int<32>[3];       /* Bounded array of 3 elements */
+deftype Buf1024 = uint<8>[1024#B];  /* Bounded array with size of 1024 bytes */
+
+deftype EmptyStruct = struct {};
+deftype BufferStruct =
+  struct
+  {
+    Buffer buffer;
+  };
+deftype Pair_32_64 =
+  struct
+  {
+    uint<32> i32;
+    uint<64> i64;
+  };
+deftype Packet34 =
+  struct
+  {
+    uint<16> flags;
+    uint<8>[32] data;
+  };
+deftype Error =
+  struct
+  {
+    int<32> code;
+    string msg;
+    int<32> exit_status;
+  };
+
+
+/* Now back to the values */
+
+
+/* Struct values */
+
+defvar empty_struct = EmptyStruct {};
+
+deftype Packet =
+  struct
+  {
+    uint<16> flags;
+    uint<8>[8] data;
+  };
+
+defvar packet_1 =
+  Packet
+  {
+    flags = 0xff00,
+    data = [0UB, 1UB, 2UB, 3UB, 4UB, 5UB, 6UB, 7UB],
+  };
+
+defvar packet_2 =
+  Packet
+  {
+    flags = 1,
+
+    /* The following line is invalid; because type of numbers is `uint<32>`.
+     */
+    /* data = [0, 1, 2, 3, 4, 5, 6, 7], */
+
+    /* User cannot specify less than 8 elements; because the `data` field is a
+     * fixed size array. So the following line is compilation error:
+     */
+    /* data = [0UB, 1UB, ], */
+  };
+
+defvar packet_3 =
+  Packet
+  {
+    /* flags = 0, */    /* Fields can be omitted */
+
+    /* The fifth element (counting from zero) is initialized to `128UB`;
+     * and all uninitialized values before that will be initialized to `128UB`,
+     * too.
+     */
+    data = [1UB, .[5] = 128UB, 2UB, 3UB],
+  };
+/* packet_3 == Packet{flags=0UH,data=[1UB,128UB,128UB,128UB,128UB,128UB,2UB,3UB]}
+ */
+
+deftype Header =
+  struct
+  {
+    uint<8>[2] magic;
+    offset<uint<32>,B> file_size;
+    uint<16>;    /* Reserved */
+    uint<16>;    /* Reserved */
+    offset<uint<32>,B> data_offset;
+  };
+
+deftype Payload =
+  struct
+  {
+    uint<8> magic;
+    uint<32> data_length;
+
+    /* Size of array depends on the `data_length` field */
+    uint<8>[data_length] data;
+  };
+
+/* An interesting feature of Poke is that types also can be used as units for
+ * offsets. The only restriction is that the type should have known size at
+ * compile-time.
+ */
+defvar off_23_packets = 23#Packet;    /* magnitude: 23, unit: Packet */
+
+/* Note that this is invalid and give compilation error:
+ *
+ *   defvar off_buffer = 1#Buffer;
+ *
+ * because `Buffer` is an unbounded array and the size is unknown at
+ * compile-time.
+ */
+
+/* Offset arithmetic with types as unit of offsets
+ */
+defvar packet_size     = 1#Packet / 1#B;    /* 10 */
+defvar two_packet_size = 2 #Packet/#B;      /* 20 */
+
+
+/* Struct Field Constraints
+ *
+ * It is common for struct fields to be constrained to their values to
+ * satisfy some conditions.  Obvious examples are magic numbers, and
+ * specification-derived constraints.
+ */
+deftype HeaderWithMagic =
+  struct
+  {
+    uint<8> magic : magic == 100UB;
+    uint<8> version : version <= 3;
+    offset<uint<32>,B> data_length;
+    uint<8>[data_length] data;
+  };
+/* The constraint expression should evaluate to an integer value; that value
+ * is interpreted as a boolean
+ */
+
+/* The following variable definition will raise an exception:
+ *   unhandled constraint violation exception
+ */
+/* defvar hdrmagic = HeaderWithMagic {}; */
+
+/* This will work because all field constraints are satisfied */
+defvar hdrmagic =
+  HeaderWithMagic
+  {
+    magic = 100UB,
+  };
+
+/* There is another way to specify the constraints: field initializers  */
+
+/* Struct Field Initializers
+ *
+ * Field initializer has two roles:
+ *   - Introduce constraint of the form: `field == initializer_expression`
+ *   - Initialize the field with initializer expression
+ */
+deftype HeaderWithInit =
+  struct
+  {
+    uint<8> magic = 100UB;
+    uint<8> version = 3;
+
+    offset<uint<32>,B> data_length;
+    uint<8>[data_length] data;
+  };
+
+/* With field initializers, this is possible: */
+defvar hdrauto = HeaderWithInit {};
+/* hdrauto.magic == 100UB && hdrauto.version == 3UB */
+
+/* The only limitation is that we cannot specify a constraint for initialized
+ * fields.
+ */
+
+
+/* FIXME integral structs */
+
+
+/* Functions
+ *
+ * Functions are lexically scoped.
+ */
+defun func1 = (uint<32> arg0, uint<64> arg1) uint<32>:
+  {
+    return arg0 | arg1 .>> 32;    /* `.>>` is bitwise shift right operator */
+  }
+
+defvar three = func1 (1, 2**33);   /* three == 3 (and `**` is power operator) */
+
+defun awesome = (string name) void:
+  {
+    printf ("%s is awesome!\n", name);
+  }
+awesome ("Poke");    /* Will print "Poke is awesome!" on terminal */
+
+defvar N = 10;
+defun Nsquare = int<32>:    /* No input parameter */
+  {
+    /* The `N` variable is captured inside the `Nsquare` function */
+    return N * N;
+  }
+
+defvar Nsq = Nsquare;     /* Nsq == 100 */
+
+N = 20;
+defvar Nsq2 = Nsquare;    /* Nsq2 == 400 */
+
+
+/* Functions with optional arguments
+ *
+ * Note that the value of initialization gets captured in the closure.
+ */
+
+defvar ten = 10;
+defun double32 = (int<32> n = ten) uint<64>:
+  {
+    n = n * 2;
+    return n;
+  }
+
+defvar twenty = double32 ();         /* twenty == 20UL */
+defvar another_twenty = double32;    /* It's OK to omit the `()` */
+defvar thirty = double32 (15);       /* thirty == 30UL */
+
+/* And because `ten` is lexically closed in `double32` function: */
+ten = 11;
+defvar no_more_twenty = double32;    /* no_more_twenty == 22 */
+ten = 10;                            /* double32 == 20UL     */
+
+/* Function with no output (a procedure!) */
+defun packet_toggle_flag = (Packet p) void:
+  {
+    p.flags = p.flags ^ 1;
+  }
+
+packet_toggle_flag (packet_1);    /* packet_1.flags == 0xff01 */
+
+
+/* Struct Methods
+ */
+deftype Point =
+  struct
+  {
+    int<32> x;
+    int<32> y;
+
+    method norm_squared = int<32>:
+      {
+        return x*x + y*y;
+      }
+  };
+
+defvar point = Point{ x = 10, y = -1 };
+defvar point_nsq = point.norm_squared;    /* point_nsq == 101 */
+
+
+/* Unions
+ *
+ * Sometimes the structure of binary format can be different depending on some
+ * eariler fields. To describe these kinds of formats, Poke provides `union`s.
+ *
+ * The first field of `union` for which its constraints are satisfied will be
+ * selected.
+ */
+deftype PacketU =
+  struct
+  {
+    uint<8> size;
+
+    union
+    {
+      struct
+      {
+        uint<8> type;
+        uint<8>[size] data;
+      } : size < 32;
+
+      struct
+      {
+        uint<16> type;
+        uint<8>[size - 1] data;
+      } : size < 128;
+
+      struct
+      {
+        uint<16> type;
+        uint<8> flags;
+        uint<8>[size - 3] data;
+      };
+    };
+  };
+
+
+defvar packet_u_1 =
+  PacketU
+  {
+    size = 10,
+  };
+defvar packet_u_2 =
+  PacketU
+  {
+    size = 64,
+  };
+defvar packet_u_3 =
+  PacketU
+  {
+    size = 128,
+  };
+
+
+/* Casts
+ */
+defvar num_u32 = 1;
+defvar num_u64 = num_u32 as uint<64>;
+
+
+/* Attributes
+ *
+ * Each value has a set of attributes.
+ */
+
+/* `size` attribute */
+
+defvar sizeof_num_u32 = num_u32'size;    /* sizeof_num_u32 == 4#B */
+defvar sizeof_num_u64 = num_u64'size;    /* sizeof_num_u64 == 8#B */
+
+defvar sbuf = BufferStruct{};
+defvar sizeof_sbuf = sbuf'size;          /* sizeof_sbuf == 0#B */
+defvar sizeof_packet_1 = packet_1'size;  /* sizeof_packet_1 == 10#B */
+
+/* `length` attribute */
+
+defvar nelem_arr1 = arr1'length;         /* nelem_arr1 == 3 */
+defvar nelem_arrx = [1, 2, 3, 4, 5, 6]'length;    /* nelem_arrx == 6 */
+
+/* For structs it's the number of fields */
+defvar nfields_packet_1 = packet_1'length;      /* nfields_packet_1 == 2 */
+
+
+/* Conditionals
+ *
+ *   - if-else
+ *   - conditional expression
+ */
+
+if (num_u32 & 1)
+  {
+    /* This branch will be evaluated */
+    num_u32 = num_u32 | 2;    /* 1 | 2 == 3 */
+    num_u64 = num_u64 | 4;    /* 1 | 4 == 5 */
+  }
+else
+  {
+    num_u32 = num_u32 | 8;    /* 1 | 8 == 9 */
+    num_u64 = num_u64 | 16;   /* 1 | 16 = 17 */
+  }
+
+defvar a_true_value = num_u32 == 3 && num_u64 == 5;
+defvar a_false_value = num_u32 == 9 || num_u64 == 17;
+
+defvar hundred = a_true_value ? 100 : 200;
+defvar thousand = a_false_value ? 200 : 1000;
+
+
+/* `print` and `printf`
+ *
+ *    FIXME
+ *
+ */
+
+
+/* Loops
+ *
+ *   - while
+ *   - for-in
+ *   - try-until
+ */
+
+defvar i = 0;
+while (1)
+{
+  i = i + 1;
+  if (i == 10)
+    break;
+}
+/* i == 10 */
+
+print "\nList of maintainers:\n";
+for (i in ["egeyar", "jmd", "positron", "darnir", "dan.cermak", "bruno",
+  "ccaione", "eblake", "tim.ruehsen", "sdi1600195", "aaptel"])
+  {
+    printf "  %s\n", i;
+  }
+
+defvar digits = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+for (i in "0123456789")
+  {
+    digits[i - '0'] = i - '0';
+  }
+/* digits == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] */
+
+defvar digitsEven = [8, 6, 4, 2, 0];
+for (i in "0123456789" where i % 2 == 0)
+  {
+    digitsEven[(i - '0') / 2] = i - '0';
+  }
+/* digitsEven == [0, 2, 4, 6, 8] */
+
+
+/* Exception Handling
+ *
+ * Poke has a mechanism to deal with errors and unexpected situations.
+ * Errors are communicated by exceptions. Exceptions are values of type
+ * `Exception` struct.
+ *
+ * One can `raise` an exception on one end and the other can `catch` that
+ * exception.
+ */
+defun do_io = void:
+  {
+    raise Exception{ code = EC_io, msg = "Cannot read the file" };
+  };
+try
+  {
+    do_io;
+  }
+catch (Exception e)
+  {
+    printf ("[exception] code:%i32d msg:\"%s\"\n", e.code, e.msg);
+  }
+
+/* Exception codes in the range `0..254` are reserved for Poke. These codes
+ * are defined by `EC_*` variables.
+ */
+
+
+/* Now, the most important concept in Poke: mapping! */
+
+
+/* Mapping
+ *
+ * The purpose of poke is to edit "IO spaces", which are the files or devices,
+ * or memory areas being edited.  This is achieved by **mapping** values.
+ */
+
+/* Using `open` function one can open an IO space; Poke supports the following
+ * IO spaces:
+ *
+ *   - Auto-growing memory buffer
+ *   - File
+ *   - Block device served by an NDB server
+ *
+ * It has the following prototype:
+ *
+ *   defun open = (string HANDLER, uint<64> flags = 0) int<32>
+ */
+
+/* open an auto-growing memory buffer */
+defvar memio = open("*Arbitrary Name*");
+
+/* open a file */
+defvar zeroio = open("/dev/zero");
+
+/* open standard input (stdin) */
+defvar stdin = open("<stdin>");
+
+/* open standard output (stdout) */
+defvar stdout = open("<stdout>");
+
+/* open standard error (stderr) */
+defvar stderr = open("<stderr>");
+
+/* close the IO spaces */
+close(stderr);
+close(stdout);
+close(stdin);
+close(zeroio);
+
+/* To access to IO space we can map a value to some area using this syntax:
+ *
+ *     TYPE @ OFFST
+ * or,
+ *     TYPE @ IOS : OFFSET
+ *
+ * The map operator,  regardless of the type of value it is mapping, always
+ * returns a *copy* of the value found stored in the IO space.
+ */
+defvar ai32 = uint<32>[1] @ 0#B;
+defvar ui32num = uint<32> @ 0#B;
+
+ai32[0] = 0xaabbccdd;    /* The first 4 bytes in IO space will change. */
+ui32num = 0xddccbbaa;    /* But this doesn't have any effect on IO space */
+
+uint<32> @ 0#B = 0xddccbbaa;    /* This works as expected */
+
+
+/* FIXME for mapped values, there's a `mapped` attribute.
+ */
+
+/* FIXME iosize(get_ios) */
+
+
+/* Endianness
+ *
+ * Big-endian is the default endian-ness. This can be verified by the following
+ * expression:
+ *
+ *   get_endian == ENDIAN_BIG
+ *
+ * This can be changed using `set_endian` function.
+ */
+set_endian(ENDIAN_LITTLE);    /* get_endian == ENDIAN_LITTLE */
+
+
+/* std.pk - Standard definition for poke
+ *
+ * The following types are defined as Standard Integral Types:
+ *   - bit
+ *   - nibble
+ *   - uint8, byte, char, int8
+ *   - uint16, ushort, int16, short
+ *   - uint32, uint, int32, int
+ *   - uint64, ulong, int64, long
+ *
+ * Standard Offset Types:
+ *   deftype off64 = offset<int64,b>;
+ *   deftype uoff64 = offset<uint64,b>;
+ *
+ * Conversion Functions:
+ *   - catos  Character array to string
+ *   - stoca  String to character array
+ *   - atoi   String to integer
+ *
+ * String Functions:
+ *   - strchr  Index of first occurrence of the character in string
+ *   - ltrim   Left trim
+ *   - rtrim   Right trim
+ *
+ * Sorting Functions:
+ *   - qsort
+ *
+ * CRC Functions:
+ *   - crc32
+ *
+ * Misc:
+ *   defvar NULL = 0#B;
+ */
+
+
+/* Standard pickles
+ *
+ *   - bmp       BMP file format
+ *   - bpf       Linux eBPF instruction set
+ *   - btf       Linux BPF Type Format
+ *   - color     Standard colors for GNU poke
+ *   - ctf       CTF (Compact Type Format)
+ *   - dwarf     DWARF debugging data format
+ *   - elf       ELF (Executable and Linkable Format)
+ *   - id3v1     ID3v1 metadata container
+ *   - id3v2     ID3v2 metadata container
+ *   - leb128    LEB128 (Little Endian Base 128) variable-length encoding
+ *   - rgb24     RGB24 encoding of colors
+ *   - time      Time-related definitions for GNU poke
+ */
+
+
+/* To get more familiar with Poke, look at these standard pickles:
+ *
+ *   - `id3v1.pk`
+ *
+ *     Things you'll see:
+ *
+ *       Language constructs:
+ *         arrays, functions, `while` loop, exceptions, field initializers,
+ *         unions, methods, pretty printers
+ *
+ *       Standard functions:
+ *         `print`, `printf`, `rtrim`, `catos`, `stoca`, `atoi`
+ *
+ *       Idiom:
+ *         How to find the active field of a `union` (using `E_elem` exception)
+ *
+ *   - `id3v2.pk`
+ *
+ *     Things you'll see:
+ *
+ *       Language constructs:
+ *         integral structs, constraints, bit concatenation, optional fields
+ */
+
+
+/* WIP ... */
+
+
+/* Based on
+ * https://kernel-recipes.org/en/2019/talks/gnu-poke-an-extensible-editor-for-structured-binary-data/
+ * GNU poke reference documentation (Texinfo file)
+ * http://jemarch.net/pokology-20200504.html
+ */
