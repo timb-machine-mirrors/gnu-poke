@@ -4035,24 +4035,49 @@ end
 
 # Instruction: reloc
 #
-# Given a map-able value and a bit-offset expressed in an ulong,
-# relocate the value to the given bit-offset.
+# Given a value, a IO space expressed in an ulong, and a bit-offset
+# expressed in an ulong, relocate the value to the given bit-offset at
+# the given IO space.
 #
 # If the given value is not map-able then raise PVM_E_INVAL.
 #
-# Stack: ( VAL ULONG -- VAL )
+# Stack: ( VAL ULONG ULONG -- VAL ULONG ULONG )
 # Exceptions: PVM_E_INVAL
 
 instruction reloc ()
   code
     pvm_val boffset = JITTER_TOP_STACK ();
-    pvm_val val = JITTER_UNDER_TOP_STACK ();
+    pvm_val ios = JITTER_UNDER_TOP_STACK ();
+    pvm_val val;
+
+    JITTER_DROP_STACK ();
+    val = JITTER_UNDER_TOP_STACK ();
+    JITTER_PUSH_STACK (boffset);
 
     if (!(PVM_IS_ARR (val) || PVM_IS_SCT (val)))
       PVM_RAISE_DFL (PVM_E_INVAL);
 
-    pvm_val_reloc (val, PVM_VAL_ULONG (boffset));
-    JITTER_DROP_STACK ();
+    pvm_val_reloc (val, ios, boffset);
+  end
+end
+
+# Instruction: ureloc
+#
+# Given a value, undo the last reloc performed on the value.
+#
+# If the given value is not map-able then raise PVM_E_INVAL.
+#
+# Stack: ( VAL -- VAL )
+# Exceptions: PVM_E_INVAL
+
+instruction ureloc ()
+  code
+      pvm_val val = JITTER_TOP_STACK ();
+
+      if (!(PVM_IS_ARR (val) || PVM_IS_SCT (val)))
+        PVM_RAISE_DFL (PVM_E_INVAL);
+
+      pvm_val_ureloc (val);
   end
 end
 
