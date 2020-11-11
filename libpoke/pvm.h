@@ -310,6 +310,11 @@ pvm_val pvm_val_mapper (pvm_val val);
 
 pvm_val pvm_val_writer (pvm_val val);
 
+/* Relocate the given value to the given bit-offset.  If the value is
+   not map-able then this is a no-operation.  */
+
+void pvm_val_reloc (pvm_val val, uint64_t boffset);
+
 /* Return a PVM value for an exception with the given CODE, MESSAGE
    and EXIT_STATUS.  */
 

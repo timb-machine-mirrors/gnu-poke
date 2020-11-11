@@ -554,6 +554,52 @@ pvm_val_writer (pvm_val val)
   return PVM_NULL;
 }
 
+void
+pvm_val_reloc (pvm_val val, uint64_t boffset)
+{
+  if (PVM_IS_ARR (val))
+    {
+      size_t nelem, i;
+      uint64_t array_offset = PVM_VAL_ULONG (PVM_VAL_ARR_OFFSET (val));
+
+      nelem = PVM_VAL_ULONG (PVM_VAL_ARR_NELEM (val));
+      for (i = 0; i < nelem; ++i)
+        {
+          pvm_val elem_value = PVM_VAL_ARR_ELEM_VALUE (val, i);
+          uint64_t elem_new_offset
+            = boffset + (PVM_VAL_ULONG (PVM_VAL_ARR_ELEM_OFFSET (val, i))
+                         - array_offset);
+
+          PVM_VAL_ARR_ELEM_OFFSET (val, i) = elem_new_offset;
+          pvm_val_reloc (elem_value, elem_new_offset);
+        }
+
+      PVM_VAL_ARR_OFFSET (val) = pvm_make_ulong (boffset, 64);
+    }
+  else if (PVM_IS_SCT (val))
+    {
+      size_t nfields, i;
+
+      nfields = PVM_VAL_ULONG (PVM_VAL_SCT_NFIELDS (val));
+      for (i = 0; i < nfields; ++i)
+        {
+          pvm_val field_value = PVM_VAL_SCT_FIELD_VALUE (val, i);
+          pvm_val field_offset = PVM_VAL_SCT_FIELD_OFFSET (val, i);
+
+          /* Do not relocate absent fields.  */
+          if (PVM_VAL_SCT_FIELD_ABSENT_P (val, i))
+            continue;
+
+          /* The offsets in struct fields are relative to the
+             beginning of the struct.  Therefore, all we have to do
+             here is to recurse to the value stored in the field.  */
+          pvm_val_reloc (field_value, boffset + field_offset);
+        }
+
+      PVM_VAL_SCT_OFFSET (val) = pvm_make_ulong (boffset, 64);
+    }
+}
+
 uint64_t
 pvm_sizeof (pvm_val val)
 {

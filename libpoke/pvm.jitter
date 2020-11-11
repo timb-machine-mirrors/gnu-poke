@@ -65,6 +65,7 @@ wrapped-functions
   pvm_type_equal_p
   pvm_ref_struct
   pvm_set_struct
+  pvm_val_reloc
   ios_cur
   ios_read_int
   ios_read_uint
@@ -4029,6 +4030,29 @@ end
 instruction unmap ()
   code
     PVM_VAL_SET_MAPPED_P (JITTER_TOP_STACK (), 0);
+  end
+end
+
+# Instruction: reloc
+#
+# Given a map-able value and a bit-offset expressed in an ulong,
+# relocate the value to the given bit-offset.
+#
+# If the given value is not map-able then raise PVM_E_INVAL.
+#
+# Stack: ( VAL ULONG -- VAL )
+# Exceptions: PVM_E_INVAL
+
+instruction reloc ()
+  code
+    pvm_val boffset = JITTER_TOP_STACK ();
+    pvm_val val = JITTER_UNDER_TOP_STACK ();
+
+    if (!(PVM_IS_ARR (val) || PVM_IS_SCT (val)))
+      PVM_RAISE_DFL (PVM_E_INVAL);
+
+    pvm_val_reloc (val, PVM_VAL_ULONG (boffset));
+    JITTER_DROP_STACK ();
   end
 end
 

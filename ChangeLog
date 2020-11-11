@@ -1,5 +1,12 @@
 2020-11-11  Jose E. Marchesi  <jemarch@gnu.org>
 
+	* libpoke/pkl-insn.def; Define PKL_INSN_RELOC.
+	* libpoke/pvm.jitter (reloc): New instruction.
+	* libpoke/pvm.h: Prototype for pk_val_reloc.
+	* libpoke/pk-val.c (pvm_val_reloc): New function.
+
+2020-11-11  Jose E. Marchesi  <jemarch@gnu.org>
+
 	* libpoke/pvm.jitter (mm,map,unmap): New instructions.
 	* libpoke/pkl-insn.def: Entries for new instructions.
 	* libpoke/pkl-gen.c (pkl_gen_pr_ass_stmt): Likewise.
