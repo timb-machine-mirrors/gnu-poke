@@ -747,6 +747,9 @@ pvm_sizeof (pvm_val val)
   else if (PVM_IS_TYP (val))
     /* By convention, type values have size zero.  */
     return 0;
+  else if (PVM_IS_CLS (val))
+    /* By convention, closure values have size zero.  */
+    return 0;
 
   assert (0);
   return 0;
