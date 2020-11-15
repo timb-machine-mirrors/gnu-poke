@@ -26,13 +26,13 @@
 
 /* Variables
  *
- * We can define variables in Poke using `defvar` keyword:
+ * We can define variables in Poke using `var` keyword:
  *
- *   defvar NAME_OF_VARIABLE = VALUE
+ *   var NAME_OF_VARIABLE = VALUE
  */
 
-defvar an_integer = 10;
-defvar a_string = "hello, poke users!";
+var an_integer = 10;
+var a_string = "hello, poke users!";
 
 /* Values
  *
@@ -80,32 +80,32 @@ defvar a_string = "hello, poke users!";
 
 
 /* Integer values */
-defvar decimal = 10;
-defvar hexadecimal = 0xff;
-defvar binary = 0b1100;
-defvar octal = 0o777;
+var decimal = 10;
+var hexadecimal = 0xff;
+var binary = 0b1100;
+var octal = 0o777;
 
-defvar si8  = 1B;     /* byte (8-bit)  */
-defvar si16 = 2H;     /* byte (16-bit) */
-defvar si32 = 3;      /* int  (32-bit) */
-defvar si64 = 4L;     /* long (64-bit) */
+var si8  = 1B;     /* byte (8-bit)  */
+var si16 = 2H;     /* byte (16-bit) */
+var si32 = 3;      /* int  (32-bit) */
+var si64 = 4L;     /* long (64-bit) */
 
-defvar ui8  = 4UB;    /* unsigned byte (8-bit)  */
-defvar ui16 = 5UH;    /* unsigned int  (16-bit) */
-defvar ui32 = 6U;     /* unsigned int  (32-bit) */
-defvar ui64 = 7UL;    /* unsigned long (64-bit) */
+var ui8  = 4UB;    /* unsigned byte (8-bit)  */
+var ui16 = 5UH;    /* unsigned int  (16-bit) */
+var ui32 = 6U;     /* unsigned int  (32-bit) */
+var ui64 = 7UL;    /* unsigned long (64-bit) */
 
-defvar long_decimal = 100_000_000;
-defvar long_hexadecimal = 0x1122_aabb_ccdd_eeff;
+var long_decimal = 100_000_000;
+var long_hexadecimal = 0x1122_aabb_ccdd_eeff;
 
 /* Operations on integer values */
 
 /* Arithmetic */
-defvar ia1 = 10 ** 2;    /* exponentiation -- ia1 == 100 */
-defvar ia2 = 5 * 7;      /* multiplication -- ia2 == 35  */
-defvar ia3 = 17 / 4;     /* division       -- ia3 == 4   */
-defvar ia4 = 17 /^ 4;    /* ceil-division  -- ia4 == 5   */
-defvar ia5 = 25 % 7;     /* modulus        -- ia5 == 4   */
+var ia1 = 10 ** 2;    /* exponentiation -- ia1 == 100 */
+var ia2 = 5 * 7;      /* multiplication -- ia2 == 35  */
+var ia3 = 17 / 4;     /* division       -- ia3 == 4   */
+var ia4 = 17 /^ 4;    /* ceil-division  -- ia4 == 5   */
+var ia5 = 25 % 7;     /* modulus        -- ia5 == 4   */
 /* There are also addition (`+`) and subtraction (`-`) operators */
 
 /* Bitwise
@@ -122,15 +122,15 @@ defvar ia5 = 25 % 7;     /* modulus        -- ia5 == 4   */
  *
  * NOTE There's not arithmetic right-shifting operator in Poke.
  */
-defvar ib1 = 1 <<. 10;             /* ib1 == 1024     */
-defvar ib2 = 1024 .>> 9;           /* ib2 == 2        */
-defvar ib3 = 0x12UB ::: 0x34UB;    /* ib3 == 0x1234UH */
-defvar ib4 = ~0x0fUB;              /* ib4 == 0xf0UB */
+var ib1 = 1 <<. 10;             /* ib1 == 1024     */
+var ib2 = 1024 .>> 9;           /* ib2 == 2        */
+var ib3 = 0x12UB ::: 0x34UB;    /* ib3 == 0x1234UH */
+var ib4 = ~0x0fUB;              /* ib4 == 0xf0UB */
 
 
 /* String values (null-terminated) */
-defvar foobar_string = "foo\nbar";
-defvar empty_string = "";
+var foobar_string = "foo\nbar";
+var empty_string = "";
 
 
 /* Offset values
@@ -146,17 +146,17 @@ defvar empty_string = "";
  */
 
 /* Offsets with named units */
-defvar off_8_bits     = 8#b;
-defvar off_23_bytes   = 23#B;
-defvar off_2000_bits  = 2#Kb;
-defvar off_2000_bytes = 2#KB;
-defvar off_3_nibbles  = 3#N;    /* 3 nibbles (each nibble is 4 bits) */
+var off_8_bits     = 8#b;
+var off_23_bytes   = 23#B;
+var off_2000_bits  = 2#Kb;
+var off_2000_bytes = 2#KB;
+var off_3_nibbles  = 3#N;    /* 3 nibbles (each nibble is 4 bits) */
 
-defvar off_1_byte = #B;   /* You can omit magnitude if it's 1 */
+var off_1_byte = #B;   /* You can omit magnitude if it's 1 */
 
 /* Offsets with numeric units */
-defvar off_8_8 = 8#8;    /* magnitude: 8, unit: 8 bits */
-defvar off_2_3 = 2#3;    /* magnitude: 2, unit: 3 bits */
+var off_8_8 = 8#8;    /* magnitude: 8, unit: 8 bits */
+var off_2_3 = 2#3;    /* magnitude: 2, unit: 3 bits */
 
 /* Offset arithmetic
  *
@@ -166,59 +166,59 @@ defvar off_2_3 = 2#3;    /* magnitude: 2, unit: 3 bits */
  * OFF /^ OFF -> INT
  * OFF %  OFF -> OFF
  */
-defvar off_1_plus_2   = 1#B +  2#B;    /* 3#B  */
-defvar off_1_minus_2  = 1#B -  2#B;    /* -1#B */
-defvar off_8_times_10 = 8#B *  10;     /* 80#B */
-defvar off_10_times_8 = 10  *  8#B;    /* 80#B */
-defvar off_7_div_1    = 7#B /  1#B;    /* 7    */  /* This is an integer */
-defvar off_7_cdiv_2   = 7#B /^ 2#B;    /* 4    */  /* This is an integer */
-defvar off_7_mod_3    = 7#B %  3#B;    /* 1#B  */
+var off_1_plus_2   = 1#B +  2#B;    /* 3#B  */
+var off_1_minus_2  = 1#B -  2#B;    /* -1#B */
+var off_8_times_10 = 8#B *  10;     /* 80#B */
+var off_10_times_8 = 10  *  8#B;    /* 80#B */
+var off_7_div_1    = 7#B /  1#B;    /* 7    */  /* This is an integer */
+var off_7_cdiv_2   = 7#B /^ 2#B;    /* 4    */  /* This is an integer */
+var off_7_mod_3    = 7#B %  3#B;    /* 1#B  */
 
 /* The following units are pre-defined in Poke:
  *
  *   b, N, B, Kb, KB, Mb, MB, Gb, GB, Kib, KiB, Mib, MiB, Gib, GiB
  *
- * Poke supports user-defined units using `defunit` construction:
+ * Poke supports user-defined units using `unit` construction:
  *
- *   defunit NAME = CONSTANT_EXPRESSION;
+ *   unit NAME = CONSTANT_EXPRESSION;
  */
-defunit BIT = 1;
-defunit NIBBLE = 4;
-defunit kilobit = 10 ** 3;
-defunit kilobyte = 10 ** 3 * 8;
+unit BIT = 1;
+unit NIBBLE = 4;
+unit kilobit = 10 ** 3;
+unit kilobyte = 10 ** 3 * 8;
 
-defvar off_bit    = 10#BIT;      /* off_bit == 10#b                         */
-defvar off_nibble = 4#NIBBLE;    /* off_nibble == 4#N && off_nibble == 16#b */
-defvar off_kb = 1#kilobit;       /* off_kb == 1#Kb && off_kb == 1000#b      */
-defvar off_kB = 2#kilobyte;      /* off_kB == 2#KB && off_kB == 16000#b     */
+var off_bit    = 10#BIT;      /* off_bit == 10#b                         */
+var off_nibble = 4#NIBBLE;    /* off_nibble == 4#N && off_nibble == 16#b */
+var off_kb = 1#kilobit;       /* off_kb == 1#Kb && off_kb == 1000#b      */
+var off_kB = 2#kilobyte;      /* off_kB == 2#KB && off_kB == 16000#b     */
 
 
 /* Array values */
-defvar arr1 = [1, 2, 3];
-defvar arr2 = [[1, 2], [3, 4]];
+var arr1 = [1, 2, 3];
+var arr2 = [[1, 2], [3, 4]];
 
-defvar elem10 = arr1[0];    /* Arrays are indexed using the usual notation */
-defvar elem12 = arr1[2];    /* This is the last element of `arr1`: 3 */
+var elem10 = arr1[0];    /* Arrays are indexed using the usual notation */
+var elem12 = arr1[2];    /* This is the last element of `arr1`: 3 */
 
 /* If you try to access elements beyond the bounds, you'll get an
  * `E_out_of_bound_exception` exception.
  */
-/* defvar elem1x = arr1[3]; */
-/* defvar elem1y = arr1[-1]; */
+/* var elem1x = arr1[3]; */
+/* var elem1y = arr1[-1]; */
 
 /* Array trimming: Extraction of a subset of the array */
-defvar arr3 = arr1[0:1];  /* arr3 == [arr1[0], arr1[1]] */
-defvar arr4 = arr1[0:0];  /* arr4 == [arr1[0]] */
+var arr3 = arr1[0:1];  /* arr3 == [arr1[0], arr1[1]] */
+var arr4 = arr1[0:0];  /* arr4 == [arr1[0]] */
 
 /* Array is a "composite value"; It behaves like pointers on copy.
  * The underlying data is shared between `arr1` and `arr5`.
  */
-defvar arr5 = arr1;
+var arr5 = arr1;
 arr5[0] = -1;    /* arr1 == [-1, 2, 3] */
 
 /* Array trimming *makes* a new array with *copies* of the selected data */
-defvar arr6 = arr1[:];
-defvar arr7 = arr2[:];
+var arr6 = arr1[:];
+var arr7 = arr2[:];
 arr6[0] = 1;        /* arr6 == [1, 2, 3] && arr1 == [-1, 2, 3] */
 arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
 
@@ -305,7 +305,7 @@ arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
  *
  * There's a mechanism to declare new types:
  *
- *   deftype NAME = TYPE;
+ *   type NAME = TYPE;
  *
  * where NAME is the name of the new type, and TYPE is either a type specifier
  * or the name of some other type.
@@ -315,35 +315,35 @@ arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
  * implement polymorphism).
  */
 
-deftype Bit   = uint<1>;
-deftype Int   = int<32>;
-deftype Ulong = uint<64>;
+type Bit   = uint<1>;
+type Int   = int<32>;
+type Ulong = uint<64>;
 
-deftype String = string;    /* Just to show that this is possible! */
+type String = string;    /* Just to show that this is possible! */
 
-deftype Buffer  = uint<8>[];        /* Unbounded array of type uint<8> */
-deftype Triple  = int<32>[3];       /* Bounded array of 3 elements */
-deftype Buf1024 = uint<8>[1024#B];  /* Bounded array with size of 1024 bytes */
+type Buffer  = uint<8>[];        /* Unbounded array of type uint<8> */
+type Triple  = int<32>[3];       /* Bounded array of 3 elements */
+type Buf1024 = uint<8>[1024#B];  /* Bounded array with size of 1024 bytes */
 
-deftype EmptyStruct = struct {};
-deftype BufferStruct =
+type EmptyStruct = struct {};
+type BufferStruct =
   struct
   {
     Buffer buffer;
   };
-deftype Pair_32_64 =
+type Pair_32_64 =
   struct
   {
     uint<32> i32;
     uint<64> i64;
   };
-deftype Packet34 =
+type Packet34 =
   struct
   {
     uint<16> flags;
     uint<8>[32] data;
   };
-deftype Error =
+type Error =
   struct
   {
     int<32> code;
@@ -357,23 +357,23 @@ deftype Error =
 
 /* Struct values */
 
-defvar empty_struct = EmptyStruct {};
+var empty_struct = EmptyStruct {};
 
-deftype Packet =
+type Packet =
   struct
   {
     uint<16> flags;
     uint<8>[8] data;
   };
 
-defvar packet_1 =
+var packet_1 =
   Packet
   {
     flags = 0xff00,
     data = [0UB, 1UB, 2UB, 3UB, 4UB, 5UB, 6UB, 7UB],
   };
 
-defvar packet_2 =
+var packet_2 =
   Packet
   {
     flags = 1,
@@ -388,7 +388,7 @@ defvar packet_2 =
     /* data = [0UB, 1UB, ], */
   };
 
-defvar packet_3 =
+var packet_3 =
   Packet
   {
     /* flags = 0, */    /* Fields can be omitted */
@@ -402,7 +402,7 @@ defvar packet_3 =
 /* packet_3 == Packet{flags=0UH,data=[1UB,128UB,128UB,128UB,128UB,128UB,2UB,3UB]}
  */
 
-deftype Header =
+type Header =
   struct
   {
     uint<8>[2] magic;
@@ -412,7 +412,7 @@ deftype Header =
     offset<uint<32>,B> data_offset;
   };
 
-deftype Payload =
+type Payload =
   struct
   {
     uint<8> magic;
@@ -426,11 +426,11 @@ deftype Payload =
  * offsets. The only restriction is that the type should have known size at
  * compile-time.
  */
-defvar off_23_packets = 23#Packet;    /* magnitude: 23, unit: Packet */
+var off_23_packets = 23#Packet;    /* magnitude: 23, unit: Packet */
 
 /* Note that this is invalid and give compilation error:
  *
- *   defvar off_buffer = 1#Buffer;
+ *   var off_buffer = 1#Buffer;
  *
  * because `Buffer` is an unbounded array and the size is unknown at
  * compile-time.
@@ -438,8 +438,8 @@ defvar off_23_packets = 23#Packet;    /* magnitude: 23, unit: Packet */
 
 /* Offset arithmetic with types as unit of offsets
  */
-defvar packet_size     = 1#Packet / 1#B;    /* 10 */
-defvar two_packet_size = 2 #Packet/#B;      /* 20 */
+var packet_size     = 1#Packet / 1#B;    /* 10 */
+var two_packet_size = 2 #Packet/#B;      /* 20 */
 
 
 /* Struct Field Constraints
@@ -448,7 +448,7 @@ defvar two_packet_size = 2 #Packet/#B;      /* 20 */
  * satisfy some conditions.  Obvious examples are magic numbers, and
  * specification-derived constraints.
  */
-deftype HeaderWithMagic =
+type HeaderWithMagic =
   struct
   {
     uint<8> magic : magic == 100UB;
@@ -463,10 +463,10 @@ deftype HeaderWithMagic =
 /* The following variable definition will raise an exception:
  *   unhandled constraint violation exception
  */
-/* defvar hdrmagic = HeaderWithMagic {}; */
+/* var hdrmagic = HeaderWithMagic {}; */
 
 /* This will work because all field constraints are satisfied */
-defvar hdrmagic =
+var hdrmagic =
   HeaderWithMagic
   {
     magic = 100UB,
@@ -480,7 +480,7 @@ defvar hdrmagic =
  *   - Introduce constraint of the form: `field == initializer_expression`
  *   - Initialize the field with initializer expression
  */
-deftype HeaderWithInit =
+type HeaderWithInit =
   struct
   {
     uint<8> magic = 100UB;
@@ -491,7 +491,7 @@ deftype HeaderWithInit =
   };
 
 /* With field initializers, this is possible: */
-defvar hdrauto = HeaderWithInit {};
+var hdrauto = HeaderWithInit {};
 /* hdrauto.magic == 100UB && hdrauto.version == 3UB */
 
 /* The only limitation is that we cannot specify a constraint for initialized
@@ -506,30 +506,30 @@ defvar hdrauto = HeaderWithInit {};
  *
  * Functions are lexically scoped.
  */
-defun func1 = (uint<32> arg0, uint<64> arg1) uint<32>:
+fun func1 = (uint<32> arg0, uint<64> arg1) uint<32>:
   {
     return arg0 | arg1 .>> 32;    /* `.>>` is bitwise shift right operator */
   }
 
-defvar three = func1 (1, 2**33);   /* three == 3 (and `**` is power operator) */
+var three = func1 (1, 2**33);   /* three == 3 (and `**` is power operator) */
 
-defun awesome = (string name) void:
+fun awesome = (string name) void:
   {
     printf ("%s is awesome!\n", name);
   }
 awesome ("Poke");    /* Will print "Poke is awesome!" on terminal */
 
-defvar N = 10;
-defun Nsquare = int<32>:    /* No input parameter */
+var N = 10;
+fun Nsquare = int<32>:    /* No input parameter */
   {
     /* The `N` variable is captured inside the `Nsquare` function */
     return N * N;
   }
 
-defvar Nsq = Nsquare;     /* Nsq == 100 */
+var Nsq = Nsquare;     /* Nsq == 100 */
 
 N = 20;
-defvar Nsq2 = Nsquare;    /* Nsq2 == 400 */
+var Nsq2 = Nsquare;    /* Nsq2 == 400 */
 
 
 /* Functions with optional arguments
@@ -537,24 +537,24 @@ defvar Nsq2 = Nsquare;    /* Nsq2 == 400 */
  * Note that the value of initialization gets captured in the closure.
  */
 
-defvar ten = 10;
-defun double32 = (int<32> n = ten) uint<64>:
+var ten = 10;
+fun double32 = (int<32> n = ten) uint<64>:
   {
     n = n * 2;
     return n;
   }
 
-defvar twenty = double32 ();         /* twenty == 20UL */
-defvar another_twenty = double32;    /* It's OK to omit the `()` */
-defvar thirty = double32 (15);       /* thirty == 30UL */
+var twenty = double32 ();         /* twenty == 20UL */
+var another_twenty = double32;    /* It's OK to omit the `()` */
+var thirty = double32 (15);       /* thirty == 30UL */
 
 /* And because `ten` is lexically closed in `double32` function: */
 ten = 11;
-defvar no_more_twenty = double32;    /* no_more_twenty == 22 */
-ten = 10;                            /* double32 == 20UL     */
+var no_more_twenty = double32;    /* no_more_twenty == 22 */
+ten = 10;                         /* double32 == 20UL     */
 
 /* Function with no output (a procedure!) */
-defun packet_toggle_flag = (Packet p) void:
+fun packet_toggle_flag = (Packet p) void:
   {
     p.flags = p.flags ^ 1;
   }
@@ -564,7 +564,7 @@ packet_toggle_flag (packet_1);    /* packet_1.flags == 0xff01 */
 
 /* Struct Methods
  */
-deftype Point =
+type Point =
   struct
   {
     int<32> x;
@@ -576,8 +576,8 @@ deftype Point =
       }
   };
 
-defvar point = Point{ x = 10, y = -1 };
-defvar point_nsq = point.norm_squared;    /* point_nsq == 101 */
+var point = Point{ x = 10, y = -1 };
+var point_nsq = point.norm_squared;    /* point_nsq == 101 */
 
 
 /* Unions
@@ -588,7 +588,7 @@ defvar point_nsq = point.norm_squared;    /* point_nsq == 101 */
  * The first field of `union` for which its constraints are satisfied will be
  * selected.
  */
-deftype PacketU =
+type PacketU =
   struct
   {
     uint<8> size;
@@ -597,19 +597,19 @@ deftype PacketU =
     {
       struct
       {
-        uint<8> type;
+        uint<8> typ;
         uint<8>[size] data;
       } : size < 32;
 
       struct
       {
-        uint<16> type;
+        uint<16> typ;
         uint<8>[size - 1] data;
       } : size < 128;
 
       struct
       {
-        uint<16> type;
+        uint<16> typ;
         uint<8> flags;
         uint<8>[size - 3] data;
       };
@@ -617,17 +617,17 @@ deftype PacketU =
   };
 
 
-defvar packet_u_1 =
+var packet_u_1 =
   PacketU
   {
     size = 10,
   };
-defvar packet_u_2 =
+var packet_u_2 =
   PacketU
   {
     size = 64,
   };
-defvar packet_u_3 =
+var packet_u_3 =
   PacketU
   {
     size = 128,
@@ -636,8 +636,8 @@ defvar packet_u_3 =
 
 /* Casts
  */
-defvar num_u32 = 1;
-defvar num_u64 = num_u32 as uint<64>;
+var num_u32 = 1;
+var num_u64 = num_u32 as uint<64>;
 
 
 /* Attributes
@@ -647,20 +647,20 @@ defvar num_u64 = num_u32 as uint<64>;
 
 /* `size` attribute */
 
-defvar sizeof_num_u32 = num_u32'size;    /* sizeof_num_u32 == 4#B */
-defvar sizeof_num_u64 = num_u64'size;    /* sizeof_num_u64 == 8#B */
+var sizeof_num_u32 = num_u32'size;    /* sizeof_num_u32 == 4#B */
+var sizeof_num_u64 = num_u64'size;    /* sizeof_num_u64 == 8#B */
 
-defvar sbuf = BufferStruct{};
-defvar sizeof_sbuf = sbuf'size;          /* sizeof_sbuf == 0#B */
-defvar sizeof_packet_1 = packet_1'size;  /* sizeof_packet_1 == 10#B */
+var sbuf = BufferStruct{};
+var sizeof_sbuf = sbuf'size;          /* sizeof_sbuf == 0#B */
+var sizeof_packet_1 = packet_1'size;  /* sizeof_packet_1 == 10#B */
 
 /* `length` attribute */
 
-defvar nelem_arr1 = arr1'length;         /* nelem_arr1 == 3 */
-defvar nelem_arrx = [1, 2, 3, 4, 5, 6]'length;    /* nelem_arrx == 6 */
+var nelem_arr1 = arr1'length;         /* nelem_arr1 == 3 */
+var nelem_arrx = [1, 2, 3, 4, 5, 6]'length;    /* nelem_arrx == 6 */
 
 /* For structs it's the number of fields */
-defvar nfields_packet_1 = packet_1'length;      /* nfields_packet_1 == 2 */
+var nfields_packet_1 = packet_1'length;      /* nfields_packet_1 == 2 */
 
 
 /* Conditionals
@@ -681,11 +681,11 @@ else
     num_u64 = num_u64 | 16;   /* 1 | 16 = 17 */
   }
 
-defvar a_true_value = num_u32 == 3 && num_u64 == 5;
-defvar a_false_value = num_u32 == 9 || num_u64 == 17;
+var a_true_value = num_u32 == 3 && num_u64 == 5;
+var a_false_value = num_u32 == 9 || num_u64 == 17;
 
-defvar hundred = a_true_value ? 100 : 200;
-defvar thousand = a_false_value ? 200 : 1000;
+var hundred = a_true_value ? 100 : 200;
+var thousand = a_false_value ? 200 : 1000;
 
 
 /* `print` and `printf`
@@ -702,7 +702,7 @@ defvar thousand = a_false_value ? 200 : 1000;
  *   - try-until
  */
 
-defvar i = 0;
+var i = 0;
 while (1)
 {
   i = i + 1;
@@ -718,14 +718,14 @@ for (i in ["egeyar", "jmd", "positron", "darnir", "dan.cermak", "bruno",
     printf "  %s\n", i;
   }
 
-defvar digits = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+var digits = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 for (i in "0123456789")
   {
     digits[i - '0'] = i - '0';
   }
 /* digits == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] */
 
-defvar digitsEven = [8, 6, 4, 2, 0];
+var digitsEven = [8, 6, 4, 2, 0];
 for (i in "0123456789" where i % 2 == 0)
   {
     digitsEven[(i - '0') / 2] = i - '0';
@@ -742,7 +742,7 @@ for (i in "0123456789" where i % 2 == 0)
  * One can `raise` an exception on one end and the other can `catch` that
  * exception.
  */
-defun do_io = void:
+fun do_io = void:
   {
     raise Exception{ code = EC_io, msg = "Cannot read the file" };
   };
@@ -778,23 +778,23 @@ catch (Exception e)
  *
  * It has the following prototype:
  *
- *   defun open = (string HANDLER, uint<64> flags = 0) int<32>
+ *   fun open = (string HANDLER, uint<64> flags = 0) int<32>
  */
 
 /* open an auto-growing memory buffer */
-defvar memio = open("*Arbitrary Name*");
+var memio = open("*Arbitrary Name*");
 
 /* open a file */
-defvar zeroio = open("/dev/zero");
+var zeroio = open("/dev/zero");
 
 /* open standard input (stdin) */
-defvar stdin = open("<stdin>");
+var stdin = open("<stdin>");
 
 /* open standard output (stdout) */
-defvar stdout = open("<stdout>");
+var stdout = open("<stdout>");
 
 /* open standard error (stderr) */
-defvar stderr = open("<stderr>");
+var stderr = open("<stderr>");
 
 /* close the IO spaces */
 close(stderr);
@@ -811,8 +811,8 @@ close(zeroio);
  * The map operator,  regardless of the type of value it is mapping, always
  * returns a *copy* of the value found stored in the IO space.
  */
-defvar ai32 = uint<32>[1] @ 0#B;
-defvar ui32num = uint<32> @ 0#B;
+var ai32 = uint<32>[1] @ 0#B;
+var ui32num = uint<32> @ 0#B;
 
 ai32[0] = 0xaabbccdd;    /* The first 4 bytes in IO space will change. */
 ui32num = 0xddccbbaa;    /* But this doesn't have any effect on IO space */
@@ -849,8 +849,8 @@ set_endian(ENDIAN_LITTLE);    /* get_endian == ENDIAN_LITTLE */
  *   - uint64, ulong, int64, long
  *
  * Standard Offset Types:
- *   deftype off64 = offset<int64,b>;
- *   deftype uoff64 = offset<uint64,b>;
+ *   type off64 = offset<int64,b>;
+ *   type uoff64 = offset<uint64,b>;
  *
  * Conversion Functions:
  *   - catos  Character array to string
@@ -869,7 +869,7 @@ set_endian(ENDIAN_LITTLE);    /* get_endian == ENDIAN_LITTLE */
  *   - crc32
  *
  * Misc:
- *   defvar NULL = 0#B;
+ *   var NULL = 0#B;
  */
 
 
