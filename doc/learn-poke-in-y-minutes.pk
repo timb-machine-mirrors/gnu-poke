@@ -44,6 +44,7 @@ var a_string = "hello, poke users!";
  *   - Array
  *   - Struct
  *   - Union
+ *   - Function
  *
  * There are two categories of values in Poke:
  *   - Simple values
@@ -54,6 +55,7 @@ var a_string = "hello, poke users!";
  *     - Array
  *     - Struct
  *     - Union
+ *     - Function  // FIXME not sure
  *
  * The difference lies in the semantics of copy. Consider the following `C`
  * prgoram:
@@ -120,12 +122,12 @@ var ia5 = 25 % 7;     /* modulus        -- ia5 == 4   */
  * Right-associative unary bitwise operator:
  *   - Bitwise complement (`~`)
  *
- * NOTE There's not arithmetic right-shifting operator in Poke.
+ * NOTE There's no arithmetic right-shifting operator in Poke.
  */
 var ib1 = 1 <<. 10;             /* ib1 == 1024     */
 var ib2 = 1024 .>> 9;           /* ib2 == 2        */
 var ib3 = 0x12UB ::: 0x34UB;    /* ib3 == 0x1234UH */
-var ib4 = ~0x0fUB;              /* ib4 == 0xf0UB */
+var ib4 = ~0x0fUB;              /* ib4 == 0xf0UB   */
 
 
 /* String values (null-terminated) */
@@ -201,14 +203,14 @@ var elem10 = arr1[0];    /* Arrays are indexed using the usual notation */
 var elem12 = arr1[2];    /* This is the last element of `arr1`: 3 */
 
 /* If you try to access elements beyond the bounds, you'll get an
- * `E_out_of_bound_exception` exception.
+ * `E_out_of_bounds` exception.
  */
 /* var elem1x = arr1[3]; */
 /* var elem1y = arr1[-1]; */
 
 /* Array trimming: Extraction of a subset of the array */
-var arr3 = arr1[0:1];  /* arr3 == [arr1[0], arr1[1]] */
-var arr4 = arr1[0:0];  /* arr4 == [arr1[0]] */
+var arr3 = arr1[0:2];  /* arr3 == [arr1[0], arr1[1]] */
+var arr4 = arr1[0:0];  /* arr4 is an empty array  */
 
 /* Array is a "composite value"; It behaves like pointers on copy.
  * The underlying data is shared between `arr1` and `arr5`.
@@ -222,6 +224,10 @@ var arr7 = arr2[:];
 arr6[0] = 1;        /* arr6 == [1, 2, 3] && arr1 == [-1, 2, 3] */
 arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
 
+/* Making array using the constructor */
+var arr8 = string[3]("Hi");    /* arr8 == ["Hi", "Hi", "Hi"] */
+var arr9 = int<32>[]();            /* arr9 == arr4 */
+
 
 /* Types
  *
@@ -229,7 +235,7 @@ arr7[0][0] = -1;    /* arr2 == [[-1, 2], [3, 4]] */
  * in Poke.
  */
 
-/* Integer types
+/* Integral types
  *
  * Most general-purpose programming languages provide a small set of integer
  * types. Poke, on the contrary, provides a rich set of integer types featuring
@@ -499,7 +505,30 @@ var hdrauto = HeaderWithInit {};
  */
 
 
-/* FIXME integral structs */
+/* Integral Structs
+ */
+type IntSct = struct uint<16> /* After `struct` comes an integral type */
+  {
+    /* bit-width of all fields == 16 */
+    uint<4> x;
+    uint<8> y;
+    uint<4> z;
+  };
+var intsct = IntSct
+  {
+    x = 0xa,
+    y = 0xbc,
+    z = 0xd,
+  };
+var x = intsct.x;    /* x == 0xaUN (`UN` means unsigned nibble (4-bit)) */
+var y = intsct.y;    /* y == 0xbcUB */
+var z = intsct.z;    /* z == 0xdUN */
+/* Compiler promotes `intsct` to integer in all contexts where an integer is
+ * expected.
+ * Integral struct is a struct that can be interpreted as an integer.
+ */
+var intsct_as_uint16 = intsct + 0H;    /* intsct_as_uint16   == 0xabcdUH */
+var intsct_as_uint16_2 = +intsct;      /* intsct_as_uint16_2 == 0xabcdUH */
 
 
 /* Functions
@@ -560,6 +589,14 @@ fun packet_toggle_flag = (Packet p) void:
   }
 
 packet_toggle_flag (packet_1);    /* packet_1.flags == 0xff01 */
+
+/* Anonymous functions (lambdas) */
+var lam1 = lambda (int x) int: { return x + 2; };
+var lam_arr = [lam1, lambda (int x) int: { return x * 2; }];
+
+var lam_r1 = lam1 (10);          /* lam_r1 == 12 */
+var lam_r2 = lam_arr[0] (10);    /* lam_r2 == 12 */
+var lam_r3 = lam_arr[1] (10);    /* lam_r3 == 20 */
 
 
 /* Struct Methods
@@ -712,8 +749,9 @@ while (1)
 /* i == 10 */
 
 print "\nList of maintainers:\n";
-for (i in ["egeyar", "jmd", "positron", "darnir", "dan.cermak", "bruno",
-  "ccaione", "eblake", "tim.ruehsen", "sdi1600195", "aaptel"])
+for (i in ["jemarch", "egeyar", "jmd", "positron", "darnir", "dan.cermak",
+           "bruno", "ccaione", "eblake", "tim.ruehsen", "sdi1600195",
+           "aaptel", "m.nabipoor"])
   {
     printf "  %s\n", i;
   }
@@ -752,7 +790,7 @@ try
   }
 catch (Exception e)
   {
-    printf ("[exception] code:%i32d msg:\"%s\"\n", e.code, e.msg);
+    printf ("[example-exception] code:%i32d msg:\"%s\"\n", e.code, e.msg);
   }
 
 /* Exception codes in the range `0..254` are reserved for Poke. These codes
