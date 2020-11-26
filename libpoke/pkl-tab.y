@@ -568,7 +568,7 @@ program_elem:
 load:
         LOAD IDENTIFIER ';'
                 {
-                  char *filename;
+                  char *filename = NULL;
                   int ret = load_module (pkl_parser,
                                          PKL_AST_IDENTIFIER_POINTER ($2),
                                          &$$, 0 /* filename_p */, &filename);
