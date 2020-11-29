@@ -1,3 +1,18 @@
+2020-11-29  Egeyar Bagcioglu  <egeyar@gmail.com>
+
+	* libpoke/ios-dev-file.c (ios_dev_file_close): Handle errors properly.
+	Return IOD_ERROR on failure, IOD_OK otherwise.
+	* libpoke/ios-dev-mem.c (ios_dev_mem_close): Return IOD_OK.
+	* libpoke/ios-dev-nbd.c (ios_dev_nbd_close): Likewise.
+	* libpoke/ios-dev-stream.c (ios_dev_stream_close): Likewise.
+	* libpoke/ios-dev.h (close): Return IOD_ERROR on failure, IOD_OK on
+	success.
+	* libpoke/ios.c (ios_close): Return IOS_OK on success and the error code on
+	failure. Do not assert that dev_if->close is successful.
+	* libpoke/ios.h (ios_close): Likewise.
+	* libpoke/pvm.jitter (close): Raise PVM_E_NO_IOS if the IO space to be
+	closed does not exist. Raise PVM_E_IO if ios_close fails.
+
 2020-11-23  Egeyar Bagcioglu  <egeyar@gmail.com>
 
 	* libpoke/ios-dev-file.c (ios_dev_file_handler_normalize): Take error
@@ -13,7 +28,8 @@
 	* libpoke/ios-dev.h (handler_normalize): Likewise.
 	(open): Likewise.
 	(IOS_FILE_HANDLER_NORMALIZE): Rename newhandler as new_handler.
-	* ios.c (ios_open): Adjust calls to handler_normalize and open.
+	* libpoke/ios.c (ios_open): Adjust calls to handler_normalize and
+	open.
 
 2020-11-22  Jose E. Marchesi  <jemarch@gnu.org>
 
