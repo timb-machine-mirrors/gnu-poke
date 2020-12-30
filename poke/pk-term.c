@@ -69,6 +69,23 @@ pop_active_class (const char *name)
   return 1;
 }
 
+/* Color registry.
+
+   The libtextstyle streams identify colors with integers, whose
+   particular values depend on the kind of the underlying physical
+   terminal and its capabilities.  The pk term, however, identifies
+   colors using a triplet of beams signifying levels of red, green and
+   blue.
+
+   We therefore maintain a registry of colors that associate RGB
+   triplets with libtextstyle color codes.  The libtextstyled output
+   stream provides a mechanism to translate from RGB codes to color
+   codes, but not the other way around (since it is really a 1-N
+   relationship.)  */
+
+static int default_color;
+static int default_bgcolor;
+
 void
 pk_term_init (int argc, char *argv[])
 {
@@ -126,6 +143,28 @@ pk_term_init (int argc, char *argv[])
 
   /* Initialize the list of active classes.  */
   active_classes = NULL;
+
+  /* Initialize the default colors and register them associated to the
+     RGB (-1,-1,-1).  */
+#if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
+  if (color_mode != color_html
+      && is_instance_of_term_styled_ostream (pk_ostream))
+    {
+      term_ostream_t term_ostream =
+        term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+
+      default_color = term_ostream_get_color (term_ostream);
+      default_bgcolor = term_ostream_get_bgcolor (term_ostream);
+    }
+  else
+#endif
+    {
+      default_color = -1;
+      default_bgcolor = -1;
+    }
+
+  register_color (default_color, -1, -1, -1);
+  register_color (default_bgcolor, -1, -1, -1);
 }
 
 void
@@ -237,6 +276,7 @@ pk_term_color_p (void)
               && getenv ("NO_COLOR") == NULL));
 }
 
+#if 0
 int
 pk_term_rgb_to_color (int red, int green, int blue)
 {
@@ -254,8 +294,9 @@ pk_term_rgb_to_color (int red, int green, int blue)
 #endif
   return -1;
 }
+#endif
 
-int
+struct pk_color
 pk_term_get_color (void)
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
@@ -273,7 +314,7 @@ pk_term_get_color (void)
    return -1;
 }
 
-int
+struct pk_color
 pk_term_get_bgcolor ()
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
@@ -292,7 +333,7 @@ pk_term_get_bgcolor ()
 }
 
 void
-pk_term_set_color (int color)
+pk_term_set_color (struct pk_color color)
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
   if (color_mode != color_html)
@@ -309,7 +350,7 @@ pk_term_set_color (int color)
 }
 
 void
-pk_term_set_bgcolor (int color)
+pk_term_set_bgcolor (struct pk_color color)
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
   if (color_mode != color_html)
