@@ -86,6 +86,79 @@ pop_active_class (const char *name)
 static int default_color;
 static int default_bgcolor;
 
+struct color_entry
+{
+  term_color_t code;
+  struct pk_color color;
+
+  struct color_entry *next;
+};
+
+static struct color_entry *color_registry;
+
+static struct color_entry *
+lookup_color (int red, int green, int blue)
+{
+  struct color_entry *entry;
+
+  for (entry = color_registry; entry; entry = entry->next)
+    {
+      if (entry->color.red == red
+          && entry->color.green == green
+          && entry->color.blue == blue)
+        break;
+    }
+
+  return entry;
+}
+
+static struct color_entry *
+lookup_color_code (int code)
+{
+  struct color_entry *entry;
+
+  for (entry = color_registry; entry; entry = entry->next)
+    {
+      if (entry->code == code)
+        break;
+    }
+
+  return entry;
+}
+
+static void
+register_color (int code, int red, int green, int blue)
+{
+  struct color_entry *entry = lookup_color (red, green, blue);
+
+  if (entry)
+    entry->code = code;
+  else
+    {
+      entry = xmalloc (sizeof (struct color_entry));
+      entry->code = code;
+      entry->color.red = red;
+      entry->color.green = green;
+      entry->color.blue = blue;
+
+      entry->next = color_registry;
+      color_registry = entry;
+    }
+}
+
+static void
+dispose_color_registry (void)
+{
+  struct color_entry *entry;
+
+  while (color_registry)
+    {
+      entry = color_registry->next;
+      free (color_registry);
+      color_registry = entry;
+    }
+}
+
 void
 pk_term_init (int argc, char *argv[])
 {
@@ -141,9 +214,6 @@ pk_term_init (int argc, char *argv[])
      : styled_ostream_create (STDOUT_FILENO, "(stdout)",
                               TTYCTL_AUTO, style_file_name));
 
-  /* Initialize the list of active classes.  */
-  active_classes = NULL;
-
   /* Initialize the default colors and register them associated to the
      RGB (-1,-1,-1).  */
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
@@ -155,16 +225,11 @@ pk_term_init (int argc, char *argv[])
 
       default_color = term_ostream_get_color (term_ostream);
       default_bgcolor = term_ostream_get_bgcolor (term_ostream);
-    }
-  else
-#endif
-    {
-      default_color = -1;
-      default_bgcolor = -1;
-    }
 
-  register_color (default_color, -1, -1, -1);
-  register_color (default_bgcolor, -1, -1, -1);
+      register_color (default_color, -1, -1, -1);
+      register_color (default_bgcolor, -1, -1, -1);
+    }
+#endif
 }
 
 void
@@ -172,6 +237,7 @@ pk_term_shutdown ()
 {
   while (active_classes)
     pop_active_class (active_classes->class);
+  dispose_color_registry ();
   styled_ostream_free (pk_ostream);
 }
 
@@ -276,60 +342,50 @@ pk_term_color_p (void)
               && getenv ("NO_COLOR") == NULL));
 }
 
-#if 0
-int
-pk_term_rgb_to_color (int red, int green, int blue)
-{
-#if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
-   if (color_mode != color_html)
-     {
-       if (is_instance_of_term_styled_ostream (pk_ostream))
-         {
-           term_ostream_t term_ostream =
-             term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
-
-           return term_ostream_rgb_to_color (term_ostream, red, green, blue);
-         }
-     }
-#endif
-  return -1;
-}
-#endif
-
 struct pk_color
 pk_term_get_color (void)
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
-   if (color_mode != color_html)
+   if (color_mode != color_html
+       && is_instance_of_term_styled_ostream (pk_ostream))
      {
-       if (is_instance_of_term_styled_ostream (pk_ostream))
-         {
-           term_ostream_t term_ostream =
-             term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+       term_ostream_t term_ostream =
+         term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+       struct color_entry *entry
+         = lookup_color_code (term_ostream_get_color (term_ostream));
 
-           return term_ostream_get_color (term_ostream);
-         }
+       assert (entry);
+       return entry->color;
      }
+   else
 #endif
-   return -1;
+     {
+       struct pk_color dfl = {-1,-1,-1};
+       return dfl;
+     }
 }
 
 struct pk_color
 pk_term_get_bgcolor ()
 {
 #if defined HAVE_TEXTSTYLE_ACCESSORS_SUPPORT
-  if (color_mode != color_html)
+  if (color_mode != color_html
+      && is_instance_of_term_styled_ostream (pk_ostream))
     {
-      if (is_instance_of_term_styled_ostream (pk_ostream))
-        {
-          term_ostream_t term_ostream =
-            term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+      term_ostream_t term_ostream =
+        term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+      struct color_entry *entry
+        = lookup_color_code (term_ostream_get_bgcolor (term_ostream));
 
-          return term_ostream_get_bgcolor (term_ostream);
-        }
+      assert (entry);
+      return entry->color;
     }
+  else
 #endif
-  return -1;
+    {
+      struct pk_color dfl = {-1,-1,-1};
+      return dfl;
+    }
 }
 
 void
@@ -342,8 +398,19 @@ pk_term_set_color (struct pk_color color)
         {
           term_ostream_t term_ostream =
             term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+          term_color_t term_color;
 
-          term_ostream_set_color (term_ostream, color);
+          if (color.red == -1 && color.green == -1 && color.blue == -1)
+            term_color = default_color;
+          else
+            {
+              term_color = term_ostream_rgb_to_color (term_ostream,
+                                                      color.red, color.green, color.blue);
+              register_color (term_color,
+                              color.red, color.green, color.blue);
+            }
+
+          term_ostream_set_color (term_ostream, term_color);
         }
     }
 #endif
@@ -359,8 +426,20 @@ pk_term_set_bgcolor (struct pk_color color)
         {
           term_ostream_t term_ostream =
             term_styled_ostream_get_destination ((term_styled_ostream_t) pk_ostream);
+          term_color_t term_color;
 
-          term_ostream_set_bgcolor (term_ostream, color);
+          if (color.red == -1 && color.green == -1 && color.blue == -1)
+            term_color = default_bgcolor;
+          else
+            {
+              term_color = term_ostream_rgb_to_color (term_ostream,
+                                                      color.red, color.green, color.blue);
+
+              register_color (term_color,
+                              color.red, color.green, color.blue);
+            }
+
+          term_ostream_set_bgcolor (term_ostream, term_color);
         }
     }
 #endif
