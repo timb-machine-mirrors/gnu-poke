@@ -66,10 +66,10 @@ end
 ## Functions and globals to wrap.
 
 wrapped-functions
-  pk_term_class
-  pk_term_end_class
-  pk_printf
-  printf
+#  pk_term_class
+#  pk_term_end_class
+#  pk_printf
+#  printf
   pvm_array_insert
   pvm_array_set
   pvm_assert
@@ -1603,6 +1603,7 @@ end
 # Stack: ( INT INT -- )
 
 instruction indent ()
+  non-relocatable
   code
     pk_term_indent (PVM_VAL_INT (JITTER_UNDER_TOP_STACK ()),
                     PVM_VAL_INT (JITTER_TOP_STACK ()));
@@ -1619,6 +1620,7 @@ end
 # Stack: ( INT INT -- )
 
 instruction printi (?n popf_printer)
+  non-relocatable
   code
     int base = PVM_VAL_INT (JITTER_TOP_STACK ());
     PVM_PRINTI (INT, int32_t, 'd', base);
@@ -1633,6 +1635,7 @@ end
 # Stack: ( UINT INT -- )
 
 instruction printiu (?n popf_printer)
+  non-relocatable
   code
     int base = PVM_VAL_INT (JITTER_TOP_STACK ());
     PVM_PRINTI (UINT, uint32_t, 'u', base);
@@ -1647,6 +1650,7 @@ end
 # Stack: ( LONG INT -- )
 
 instruction printl (?n popf_printer)
+  non-relocatable
   code
     int base = PVM_VAL_INT (JITTER_TOP_STACK ());
     PVM_PRINTL (LONG, int64_t, 'd', base);
@@ -1661,6 +1665,7 @@ end
 # Stack: ( ULONG INT -- )
 
 instruction printlu (?n popf_printer)
+  non-relocatable
   code
    int base = PVM_VAL_INT (JITTER_TOP_STACK ());
    PVM_PRINTL (ULONG, uint64_t, 'u', base);
@@ -1674,6 +1679,7 @@ end
 # Stack: ( STR -- )
 
 instruction prints ()
+  non-relocatable
   code
     pvm_print_string (JITTER_TOP_STACK ());
     JITTER_DROP_STACK ();
@@ -1687,6 +1693,7 @@ end
 # Stack: ( STR STR -- )
 
 instruction beghl ()
+  non-relocatable
   code
     char *url = PVM_VAL_STR (JITTER_UNDER_TOP_STACK ());
     char *id = PVM_VAL_STR (JITTER_TOP_STACK ());
@@ -1708,6 +1715,7 @@ end
 # Exceptions: PVM_E_GENERIC
 
 instruction endhl ()
+  non-relocatable
   code
     if (!pk_term_end_hyperlink ())
       PVM_RAISE (PVM_E_GENERIC,
@@ -1725,6 +1733,7 @@ end
 # Stack: ( STR -- )
 
 instruction begsc ()
+  non-relocatable
   code
     pk_term_class (PVM_VAL_STR (JITTER_TOP_STACK ()));
     JITTER_DROP_STACK ();
@@ -1739,6 +1748,7 @@ end
 # Stack: ( STR -- )
 
 instruction endsc ()
+  non-relocatable
   code
     if (!pk_term_end_class (PVM_VAL_STR (JITTER_TOP_STACK ())))
       PVM_RAISE (PVM_E_INVAL,
