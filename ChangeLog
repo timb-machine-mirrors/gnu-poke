@@ -1,3 +1,7 @@
+2021-02-27  Sergei Trofimovich <slyfox@gentoo.org>
+
+	* doc/poke.texi (Describe-Compute): fix example and wording.
+
 2021-02-26  Jose E. Marchesi  <jemarch@gnu.org>
 
 	* etc/Makefile.am (EXTRA_DIST): Distribute etc/poke.rec.
