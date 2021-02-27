@@ -1,3 +1,8 @@
+2021-02-27  Morten Linderud  <morten@linderud.pw>
+
+	* poke/poke.pk: Fix setting of map_load_path when XDG_DATA_HOME is
+	set.
+
 2021-02-27  Sergei Trofimovich <slyfox@gentoo.org>
 
 	* doc/poke.texi (Describe-Compute): fix example and wording.
