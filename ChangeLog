@@ -1,3 +1,8 @@
+2021-02-27  Sergei Trofimovich <slyfox@gentoo.org>
+
+	* pickles/Makefile.am (dist_pickles_DATA): Package rest of *.pk files
+	to tarball: mcr.pk dwarf-expr.pk dwarf-info.pk id3v2.pk.
+
 2021-02-27  Jose E. Marchesi  <jemarch@gnu.org>
 
 	* libpoke/pk-val.c (pk_val_offset): Return PK_NULL if the given
